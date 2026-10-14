@@ -65,19 +65,17 @@
 
 /* Listen */
 
-.reader-controls button:nth-of-type(3) {
+.speech-button {
   margin-left: auto;
+}
 
+.speech-button.play {
   background: var(--sage);
-
   color: var(--sage-text);
 }
 
-/* Stop */
-
-.reader-controls button:nth-of-type(4) {
+.speech-button.stop {
   background: var(--coral);
-
   color: var(--coral-text);
 }
 

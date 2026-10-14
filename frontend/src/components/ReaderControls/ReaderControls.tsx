@@ -3,19 +3,19 @@ import './ReaderControls.css'
 type ReaderControlsProps = {
   currentPage: number
   totalPages: number
+  isSpeaking: boolean
   onPrevious: () => void
   onNext: () => void
-  onListen: () => void
-  onStop: () => void
+  onToggleSpeech: () => void
 }
 
 function ReaderControls({
   currentPage,
   totalPages,
+  isSpeaking,
   onPrevious,
   onNext,
-  onListen,
-  onStop,
+  onToggleSpeech,
 }: ReaderControlsProps) {
   return (
     <div className="reader-controls">
@@ -37,13 +37,12 @@ function ReaderControls({
         Next
       </button>
 
-      <button onClick={onListen}>
-        Listen
-      </button>
-
-      <button onClick={onStop}>
-        Stop
-      </button>
+      <button
+  className={isSpeaking ? 'speech-button stop' : 'speech-button play'}
+  onClick={onToggleSpeech}
+>
+  {isSpeaking ? '■ Stop' : '▶ Play'}
+</button>
     </div>
   )
 }

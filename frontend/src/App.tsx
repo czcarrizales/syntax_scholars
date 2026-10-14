@@ -10,9 +10,10 @@ import './App.css'
 
 function App() {
   const [file, setFile] = useState<File | null>(null)
-  const [book, setBook] = useState<Book | null>(null)
-  const [currentPage, setCurrentPage] = useState(0)
-  const [message, setMessage] = useState('')
+const [book, setBook] = useState<Book | null>(null)
+const [currentPage, setCurrentPage] = useState(0)
+const [message, setMessage] = useState('')
+const [isSpeaking, setIsSpeaking] = useState(false)
 
   async function processPdf() {
     if (!file) {
@@ -63,32 +64,40 @@ function App() {
     )
   }
 
-  function listen() {
-    if (!book) return
-
-    const text = book.pages[currentPage]?.text
-
-    if (!text) return
-
+  function toggleSpeech() {
+  if (isSpeaking) {
     window.speechSynthesis.cancel()
-
-    const speech =
-      new SpeechSynthesisUtterance(text)
-
-    window.speechSynthesis.speak(speech)
+    setIsSpeaking(false)
+    return
   }
 
-  function stopListening() {
-    window.speechSynthesis.cancel()
+  if (!book) return
+
+  const text = book.pages[currentPage]?.text
+  if (!text) return
+
+  const speech = new SpeechSynthesisUtterance(text)
+
+  speech.onend = () => {
+    setIsSpeaking(false)
   }
+
+  speech.onerror = () => {
+    setIsSpeaking(false)
+  }
+
+  setIsSpeaking(true)
+  window.speechSynthesis.speak(speech)
+}
 
   useEffect(() => {
-    window.speechSynthesis.cancel()
+  window.speechSynthesis.cancel()
+  setIsSpeaking(false)
 
-    return () => {
-      window.speechSynthesis.cancel()
-    }
-  }, [currentPage])
+  return () => {
+    window.speechSynthesis.cancel()
+  }
+}, [currentPage])
 
   return (
     <div className="app-layout">
@@ -109,13 +118,13 @@ function App() {
 
         {book && (
           <Reader
-            book={book}
-            currentPage={currentPage}
-            onPrevious={previousPage}
-            onNext={nextPage}
-            onListen={listen}
-            onStop={stopListening}
-          />
+  book={book}
+  currentPage={currentPage}
+  isSpeaking={isSpeaking}
+  onPrevious={previousPage}
+  onNext={nextPage}
+  onToggleSpeech={toggleSpeech}
+/>
         )}
       </main>
     </div>

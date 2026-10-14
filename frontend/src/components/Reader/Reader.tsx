@@ -5,19 +5,19 @@ import './Reader.css'
 type ReaderProps = {
   book: Book
   currentPage: number
+  isSpeaking: boolean
   onPrevious: () => void
   onNext: () => void
-  onListen: () => void
-  onStop: () => void
+  onToggleSpeech: () => void
 }
 
 function Reader({
   book,
   currentPage,
+  isSpeaking,
   onPrevious,
   onNext,
-  onListen,
-  onStop,
+  onToggleSpeech,
 }: ReaderProps) {
     const displayTitle = book.title
     .replace(/\.pdf$/i, '')
@@ -28,13 +28,13 @@ function Reader({
       <h2>{displayTitle}</h2>
 
       <ReaderControls
-        currentPage={currentPage}
-        totalPages={book.pages.length}
-        onPrevious={onPrevious}
-        onNext={onNext}
-        onListen={onListen}
-        onStop={onStop}
-      />
+  currentPage={currentPage}
+  totalPages={book.pages.length}
+  isSpeaking={isSpeaking}
+  onPrevious={onPrevious}
+  onNext={onNext}
+  onToggleSpeech={onToggleSpeech}
+/>
 
       <article className="reading-page">
         <p>{book.pages[currentPage]?.text}</p>
