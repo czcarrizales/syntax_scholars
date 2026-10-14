@@ -1,12 +1,142 @@
 .upload-panel {
+  position: relative;
+
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 
-  padding: 20px;
-  border-bottom: 1px solid #ddd;
+  min-height: 112px;
+
+  padding: 24px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fffaf0,
+      #f7eddf
+    );
+
+  border: 1px solid #ece2d7;
+  border-radius: 20px;
+
+  box-shadow:
+    0 8px 25px rgba(83, 67, 109, 0.06);
+}
+
+.upload-panel::before {
+  content: "Syntax Scholars";
+
+  position: absolute;
+  top: 17px;
+  left: 24px;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 27px;
+  font-weight: 700;
+
+  color: var(--navy);
+}
+
+.upload-panel::after {
+  content: "Turn PDFs into a more accessible reading experience.";
+
+  position: absolute;
+  top: 51px;
+  left: 24px;
+
+  color: var(--muted);
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 14px;
+}
+
+.upload-panel input {
+  margin-top: 58px;
+
+  max-width: 330px;
+
+  padding: 10px;
+
+  background: rgba(255, 255, 255, 0.75);
+
+  border: 1px solid #ded7e7;
+  border-radius: 10px;
+
+  color: #4d4860;
+}
+
+.upload-panel button {
+  margin-top: 58px;
+
+  min-height: 44px;
+
+  padding: 0 25px;
+
+  border: 0;
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #9073df,
+      #6f50c4
+    );
+
+  color: white;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 16px rgba(104, 77, 180, 0.2);
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.upload-panel button:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 9px 20px rgba(104, 77, 180, 0.25);
 }
 
 .upload-panel p {
-  margin: 0;
+  margin: 58px 0 0;
+
+  padding: 9px 13px;
+
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.55);
+
+  color: var(--muted);
+
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .upload-panel {
+    flex-wrap: wrap;
+
+    padding-top: 84px;
+  }
+
+  .upload-panel input,
+  .upload-panel button,
+  .upload-panel p {
+    margin-top: 0;
+  }
 }

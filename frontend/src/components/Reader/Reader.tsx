@@ -19,9 +19,13 @@ function Reader({
   onListen,
   onStop,
 }: ReaderProps) {
+    const displayTitle = book.title
+    .replace(/\.pdf$/i, '')
+    .replace(/[-_]/g, ' ')
+
   return (
     <section className="reader">
-      <h2>{book.title}</h2>
+      <h2>{displayTitle}</h2>
 
       <ReaderControls
         currentPage={currentPage}
