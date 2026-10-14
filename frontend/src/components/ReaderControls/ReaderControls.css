@@ -1,0 +1,16 @@
+.reader-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin-bottom: 20px;
+}
+
+.reader-controls button {
+  padding: 8px 14px;
+}
+
+.reader-controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

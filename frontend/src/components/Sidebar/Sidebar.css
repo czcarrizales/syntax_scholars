@@ -1,0 +1,30 @@
+.sidebar {
+  padding: 24px;
+  border-right: 1px solid #ddd;
+}
+
+.sidebar h1 {
+  margin-top: 0;
+}
+
+.page-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.page-item {
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.page-item.active {
+  background: #e6ddff;
+  border-radius: 8px;
+}

@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react'
 
-type Page = {
-  page: number
-  text: string
-}
+import Sidebar from './components/Sidebar/Sidebar'
+import UploadPanel from './components/UploadPanel/UploadPanel'
+import Reader from './components/Reader/Reader'
 
-type Book = {
-  title: string
-  page_count: number
-  pages: Page[]
-}
+import type { Book } from './types/book'
+
+import './App.css'
 
 function App() {
   const [file, setFile] = useState<File | null>(null)
@@ -50,14 +47,19 @@ function App() {
   }
 
   function previousPage() {
-    setCurrentPage((page) => Math.max(page - 1, 0))
+    setCurrentPage((page) =>
+      Math.max(page - 1, 0)
+    )
   }
 
   function nextPage() {
     if (!book) return
 
     setCurrentPage((page) =>
-      Math.min(page + 1, book.pages.length - 1)
+      Math.min(
+        page + 1,
+        book.pages.length - 1
+      )
     )
   }
 
@@ -70,7 +72,9 @@ function App() {
 
     window.speechSynthesis.cancel()
 
-    const speech = new SpeechSynthesisUtterance(text)
+    const speech =
+      new SpeechSynthesisUtterance(text)
+
     window.speechSynthesis.speak(speech)
   }
 
@@ -79,7 +83,6 @@ function App() {
   }
 
   useEffect(() => {
-    // Stop reading if the user changes pages.
     window.speechSynthesis.cancel()
 
     return () => {
@@ -88,65 +91,34 @@ function App() {
   }, [currentPage])
 
   return (
-    <main>
-      <h1>Syntax Scholars</h1>
-
-      <input
-        type="file"
-        accept=".pdf,application/pdf"
-        onChange={(event) => {
-          setFile(event.target.files?.[0] ?? null)
-        }}
+    <div className="app-layout">
+      <Sidebar
+        book={book}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
       />
 
-      <button onClick={processPdf}>
-        Process PDF
-      </button>
+      <main className="main-content">
+        <UploadPanel
+          file={file}
+          book={book}
+          message={message}
+          onFileChange={setFile}
+          onProcess={processPdf}
+        />
 
-      {message && <p>{message}</p>}
-
-      {book && (
-        <section>
-          <h2>{book.title}</h2>
-
-          <p>
-            Page {currentPage + 1} of {book.page_count}
-          </p>
-
-          <div>
-            <button
-              onClick={previousPage}
-              disabled={currentPage === 0}
-            >
-              Previous
-            </button>
-
-            <button
-              onClick={nextPage}
-              disabled={currentPage === book.pages.length - 1}
-            >
-              Next
-            </button>
-          </div>
-
-          <div>
-            <button onClick={listen}>
-              Listen
-            </button>
-
-            <button onClick={stopListening}>
-              Stop
-            </button>
-          </div>
-
-          <hr />
-
-          <p>
-            {book.pages[currentPage]?.text}
-          </p>
-        </section>
-      )}
-    </main>
+        {book && (
+          <Reader
+            book={book}
+            currentPage={currentPage}
+            onPrevious={previousPage}
+            onNext={nextPage}
+            onListen={listen}
+            onStop={stopListening}
+          />
+        )}
+      </main>
+    </div>
   )
 }
 

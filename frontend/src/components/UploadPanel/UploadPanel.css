@@ -1,0 +1,12 @@
+.upload-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.upload-panel p {
+  margin: 0;
+}
