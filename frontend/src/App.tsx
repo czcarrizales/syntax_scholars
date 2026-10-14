@@ -78,6 +78,19 @@ const [isSpeaking, setIsSpeaking] = useState(false)
 
   const speech = new SpeechSynthesisUtterance(text)
 
+const voices = window.speechSynthesis.getVoices()
+
+const preferredVoice = voices.find(
+  (voice) => voice.name === 'Google UK English Male'
+)
+
+if (preferredVoice) {
+  speech.voice = preferredVoice
+}
+
+speech.rate = 0.95
+speech.pitch = 1
+
   speech.onend = () => {
     setIsSpeaking(false)
   }
