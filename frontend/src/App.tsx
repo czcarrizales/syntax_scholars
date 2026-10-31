@@ -15,6 +15,31 @@ const [currentPage, setCurrentPage] = useState(0)
 const [message, setMessage] = useState('')
 const [isSpeaking, setIsSpeaking] = useState(false)
 
+// stores the voices and the selected voice and speech rate
+const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+const [selectedVoice, setSelectedVoice] = useState('')
+const [speechRate, setSpeechRate] = useState(1)
+
+// Load the voices available in the browser and set the default voice if none is selected
+useEffect(() => {
+  function loadVoices() {
+    const availableVoices = window.speechSynthesis.getVoices()
+    setVoices(availableVoices)
+
+    if (availableVoices.length > 0 && !selectedVoice) {
+      setSelectedVoice(availableVoices[0].name)
+    }
+  }
+
+  loadVoices()
+
+  window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
+
+  return () => {
+    window.speechSynthesis.removeEventListener('voiceschanged', loadVoices)
+  }
+}, [selectedVoice])
+
   async function processPdf() {
     if (!file) {
       setMessage('Choose a PDF first.')
@@ -78,18 +103,18 @@ const [isSpeaking, setIsSpeaking] = useState(false)
 
   const speech = new SpeechSynthesisUtterance(text)
 
-const voices = window.speechSynthesis.getVoices()
-
-const preferredVoice = voices.find(
-  (voice) => voice.name === 'Google UK English Male'
+  
+const voice = voices.find(
+  (voice) => voice.name === selectedVoice
 )
 
-if (preferredVoice) {
-  speech.voice = preferredVoice
+if (voice) {
+  speech.voice = voice
 }
 
-speech.rate = 0.95
+speech.rate = speechRate
 speech.pitch = 1
+
 
   speech.onend = () => {
     setIsSpeaking(false)
@@ -134,9 +159,14 @@ speech.pitch = 1
   book={book}
   currentPage={currentPage}
   isSpeaking={isSpeaking}
+  voices={voices}
+  selectedVoice={selectedVoice}
+  speechRate={speechRate}
   onPrevious={previousPage}
   onNext={nextPage}
   onToggleSpeech={toggleSpeech}
+  onVoiceChange={setSelectedVoice}
+  onRateChange={setSpeechRate}
 />
         )}
       </main>
