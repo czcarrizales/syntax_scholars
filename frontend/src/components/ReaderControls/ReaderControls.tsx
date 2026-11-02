@@ -14,6 +14,25 @@ type ReaderControlsProps = {
   onRateChange: (rate: number) => void
 }
 
+// Converts language codes to human-readable names for display in the voice selection dropdown
+function getLanguageName(lang: string) {
+  const languageNames: Record<string, string> = {
+    'en-US': 'English (US)',
+    'en-GB': 'English (UK)',
+    'en-AU': 'English (Australia)',
+    'en-IE': 'English (Ireland)',
+    'en-IN': 'English (India)',
+    'en-CA': 'English (Canada)',
+    'es-Us': 'Spanish (US)',
+    'es-ES': 'Spanish (Spain)',
+    'es-MX': 'Spanish (Mexico)',
+    'fr-FR': 'French (France)',
+    'fr-CA': 'French (Canada)',
+    'de-DE': 'German (Germany)',
+    'it-IT': 'Italian (Italy)',
+  }
+  return languageNames[lang] || lang
+}
 function ReaderControls({
   currentPage,
   totalPages,
@@ -56,7 +75,7 @@ function ReaderControls({
           >
             {voices.map((voice) => (
               <option key={voice.voiceURI} value={voice.name}>
-                {voice.name} - {voice.lang}
+                {voice.name} - {getLanguageName(voice.lang)}
               </option>
             ))}
           </select>
