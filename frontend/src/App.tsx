@@ -10,35 +10,36 @@ import './App.css'
 
 function App() {
   const [file, setFile] = useState<File | null>(null)
-const [book, setBook] = useState<Book | null>(null)
-const [currentPage, setCurrentPage] = useState(0)
-const [message, setMessage] = useState('')
-const [isSpeaking, setIsSpeaking] = useState(false)
+  const [book, setBook] = useState<Book | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [message, setMessage] = useState('')
+  const [isSpeaking, setIsSpeaking] = useState(false)
 
-// stores the voices and the selected voice and speech rate
-const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
-const [selectedVoice, setSelectedVoice] = useState('')
-const [speechRate, setSpeechRate] = useState(1)
+  // Stores the voices and the selected voice and speech rate
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [selectedVoice, setSelectedVoice] = useState('')
+  const [speechRate, setSpeechRate] = useState(1)
 
-// Load the voices available in the browser and set the default voice if none is selected
-useEffect(() => {
-  function loadVoices() {
-    const availableVoices = window.speechSynthesis.getVoices()
-    setVoices(availableVoices)
+  // Load the voices available in the browser and set the default voice if none is selected
+  useEffect(() => {
+    function loadVoices() {
+      const availableVoices = window.speechSynthesis.getVoices()
+      setVoices(availableVoices)
 
-    if (availableVoices.length > 0 && !selectedVoice) {
-      setSelectedVoice(availableVoices[0].name)
+      // Ensures that speech has a default voice before user selection
+      if (availableVoices.length > 0 && !selectedVoice) {
+        setSelectedVoice(availableVoices[0].name)
+      }
     }
-  }
 
-  loadVoices()
+    loadVoices()
 
-  window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
 
-  return () => {
-    window.speechSynthesis.removeEventListener('voiceschanged', loadVoices)
-  }
-}, [selectedVoice])
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices)
+    }
+  }, [selectedVoice])
 
   async function processPdf() {
     if (!file) {
@@ -90,52 +91,53 @@ useEffect(() => {
   }
 
   function toggleSpeech() {
-  if (isSpeaking) {
-    window.speechSynthesis.cancel()
-    setIsSpeaking(false)
-    return
+    if (isSpeaking) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+      return
+    }
+
+    if (!book) return
+
+    const text = book.pages[currentPage]?.text
+    if (!text) return
+
+    const speech = new SpeechSynthesisUtterance(text)
+
+    // Matches the user selected voice to an available voice in the browser  
+    const voice = voices.find(
+      (voice) => voice.name === selectedVoice
+    )
+
+    if (voice) {
+      speech.voice = voice
+    }
+
+    speech.rate = speechRate
+    speech.pitch = 1
+
+    // Keeps the UI synchronized when the speech ends or encounters an error
+    speech.onend = () => {
+      setIsSpeaking(false)
+    }
+
+    speech.onerror = () => {
+      setIsSpeaking(false)
+    }
+
+    setIsSpeaking(true)
+    window.speechSynthesis.speak(speech)
   }
 
-  if (!book) return
-
-  const text = book.pages[currentPage]?.text
-  if (!text) return
-
-  const speech = new SpeechSynthesisUtterance(text)
-
-  
-const voice = voices.find(
-  (voice) => voice.name === selectedVoice
-)
-
-if (voice) {
-  speech.voice = voice
-}
-
-speech.rate = speechRate
-speech.pitch = 1
-
-
-  speech.onend = () => {
-    setIsSpeaking(false)
-  }
-
-  speech.onerror = () => {
-    setIsSpeaking(false)
-  }
-
-  setIsSpeaking(true)
-  window.speechSynthesis.speak(speech)
-}
-
+  // Cancels any ongoing speech when the current page changes
   useEffect(() => {
-  window.speechSynthesis.cancel()
-  setIsSpeaking(false)
-
-  return () => {
     window.speechSynthesis.cancel()
-  }
-}, [currentPage])
+    setIsSpeaking(false)
+
+    return () => {
+      window.speechSynthesis.cancel()
+    }
+  }, [currentPage])
 
   return (
     <div className="app-layout">
@@ -156,18 +158,18 @@ speech.pitch = 1
 
         {book && (
           <Reader
-  book={book}
-  currentPage={currentPage}
-  isSpeaking={isSpeaking}
-  voices={voices}
-  selectedVoice={selectedVoice}
-  speechRate={speechRate}
-  onPrevious={previousPage}
-  onNext={nextPage}
-  onToggleSpeech={toggleSpeech}
-  onVoiceChange={setSelectedVoice}
-  onRateChange={setSpeechRate}
-/>
+            book={book}
+            currentPage={currentPage}
+            isSpeaking={isSpeaking}
+            voices={voices}
+            selectedVoice={selectedVoice}
+            speechRate={speechRate}
+            onPrevious={previousPage}
+            onNext={nextPage}
+            onToggleSpeech={toggleSpeech}
+            onVoiceChange={setSelectedVoice}
+            onRateChange={setSpeechRate}
+          />
         )}
       </main>
     </div>
