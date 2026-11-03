@@ -36,7 +36,28 @@ function mockResponse(body: unknown, status = 200) {
 // Restore fetch after each test
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.useRealTimers()
 })
+
+
+function mockPendingFetch() {
+  const fetchMock = vi.fn(
+    (_url: string, options: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        const signal = options.signal as AbortSignal
+
+        signal.addEventListener(
+          'abort',
+          () => reject(new DOMException('Aborted', 'AbortError')),
+          { once: true }
+        )
+      })
+  )
+
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
+}
+
 
 describe('uploadPdf', () => {
   // 1. Valid response
@@ -152,4 +173,69 @@ describe('uploadPdf', () => {
       'Request failed (HTTP 500)'
     )
   })
+
+  
+// 9. Manual cancellation
+it('cancels an in-progress upload', async () => {
+  mockPendingFetch()
+
+  const controller = new AbortController()
+  const request = uploadPdf(makeFile(), controller.signal)
+
+  controller.abort()
+
+  await expect(request).rejects.toThrow(
+    'PDF processing cancelled.'
+  )
+})
+
+// 10. Automatic timeout
+it('times out when the backend takes too long', async () => {
+  vi.useFakeTimers()
+  mockPendingFetch()
+
+  // Use 100 ms for the test instead of waiting 60 seconds.
+  const request = uploadPdf(makeFile(), undefined, 100)
+  const assertion = expect(request).rejects.toThrow(
+    'PDF processing timed out.'
+  )
+
+  await vi.advanceTimersByTimeAsync(100)
+  await assertion
+})
+
+// 11. Ignore a response received after cancellation
+it('rejects a late response after cancellation', async () => {
+  let resolveFetch!: (response: Response) => void
+
+  // Simulate a fetch implementation that ignores abort.
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve
+        })
+    )
+  )
+
+  const controller = new AbortController()
+  const request = uploadPdf(makeFile(), controller.signal)
+
+  controller.abort()
+
+  // The old request still produces a valid response.
+  resolveFetch(
+    new Response(JSON.stringify(validBook), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  )
+
+  // But it must not be accepted.
+  await expect(request).rejects.toThrow(
+    'PDF processing cancelled.'
+  )
+})
+
 })
