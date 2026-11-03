@@ -17,6 +17,26 @@ function App() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  
+function handleFileChange(newFile: File | null) {
+  // Update the selected PDF
+  setFile(newFile);
+
+  // Remove the previously processed document
+  setBook(null);
+
+  // Reset page navigation
+  setCurrentPage(0);
+
+  // Clear any error or status message
+  setMessage("");
+
+  // Stop speech from the previous document
+  window.speechSynthesis.cancel();
+  setIsSpeaking(false);
+}
+
+
   async function processPdf() {
     if (!file) {
       setMessage("Choose a PDF first.");
@@ -115,13 +135,13 @@ function App() {
 
       <main className="main-content">
         <UploadPanel
-          file={file}
-          book={book}
-          message={message}
-          isUploading={isUploading}
-          onFileChange={setFile}
-          onProcess={processPdf}
-        />
+  file={file}
+  book={book}
+  message={message}
+  isUploading={isUploading}
+  onFileChange={handleFileChange}
+  onProcess={processPdf}
+/>
 
         {book && (
           <Reader
