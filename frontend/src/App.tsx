@@ -15,6 +15,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState(0)
   const [message, setMessage] = useState('')
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
   // Stores the voices and the selected voice and speech rate
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
@@ -41,6 +42,16 @@ function App() {
       window.speechSynthesis.removeEventListener('voiceschanged', loadVoices)
     }
   }, [selectedVoice])
+
+  function handleFileChange(newFile: File | null) {
+  setFile(newFile)
+  setBook(null)
+  setCurrentPage(0)
+  setMessage('')
+
+  window.speechSynthesis.cancel()
+  setIsSpeaking(false)
+}
 
   async function processPdf() {
     if (!file) {
