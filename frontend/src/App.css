@@ -73,44 +73,47 @@
   }
 }
 
-//summary panel styles
+
+/* Summary panel */
 .summary-panel {
   flex-shrink: 0;
-  margin-top: 18px;
-  padding: 20px 24px;
-  max-height: 35vh;
-  overflow-y: auto;
+  margin-top: 12px;
+  padding: 12px 16px;
 
   background: var(--paper);
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 16px;
+}
+
+/* Keep the summary controls on one row */
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .summary-panel button {
-  min-height: 44px;
-  padding: 12px 24px;
+  min-height: 40px;
+  padding: 0 16px;
 
-  border: none;
-  border-radius: 12px;
+  background: var(--lavender-100);
+  border: 1px solid var(--lavender-200);
+  border-radius: 10px;
 
-  background: linear-gradient(135deg, #9073df, #6f50c4);
-  color: white;
-
+  color: var(--navy);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-
-  box-shadow: 0 4px 12px rgba(111, 80, 196, 0.2);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .summary-panel button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(111, 80, 196, 0.3);
+  background: var(--lavender-200);
 }
 
 .summary-panel button:focus-visible {
-  outline: 3px solid var(--navy);
+  outline: 2px solid var(--navy);
   outline-offset: 3px;
 }
 
@@ -119,32 +122,39 @@
   cursor: wait;
 }
 
-.summary-panel p {
-  margin: 12px 0 0;
-  line-height: 1.6;
+/* The show/hide button should be less prominent */
+.summary-panel .summary-toggle {
+  background: transparent;
+  border: none;
+  color: var(--lavender-600);
+}
+
+/* Only the summary text scrolls, not the whole panel */
+.summary-content {
+  max-height: 35vh;
+  overflow-y: auto;
+
+  margin-top: 12px;
+  padding: 16px;
+
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.summary-content h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.summary-content p {
+  margin: 0;
+  line-height: 1.65;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.summary-panel h2 {
-  margin: 18px 0 0;
-  color: var(--navy);
-  font-size: 20px;
-}
-
-.main-content>.summary-panel {
-  flex-shrink: 0;
-  margin-top: 20px;
-}
-
-.summary-panel button {
-  background: #eee7ff;
-  color: #35296b;
-  border: 1px solid #ded2ff;
-  box-shadow: none;
-}
-
-.summary-panel button:hover:not(:disabled) {
-  background: #ded2ff;
-  box-shadow: 0 3px 8px rgba(73, 60, 112, 0.12);
+.summary-error {
+  margin: 12px 0 0;
+  color: var(--coral-text);
 }

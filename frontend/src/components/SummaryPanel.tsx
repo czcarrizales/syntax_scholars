@@ -2,86 +2,111 @@ import type { Book } from "../types/book";
 import { useState } from "react";
 
 type SummaryPanelProps = {
-    book: Book;
+  book: Book;
 };
 
 function SummaryPanel({ book }: SummaryPanelProps) {
+  const [summary, setSummary] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
 
-    const [summary, setSummary] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
+  async function summarizePdf() {
+    if (isLoading) return;
 
-    async function summarizePdf() {
-        if (isLoading) return;
+    const text = book.pages
+      .map((page) => page.text)
+      .join("\n\n")
+      .trim();
 
-        const text = book.pages
-            .map((page) => page.text)
-            .join("\n\n")
-            .trim();
-
-        if (!text) {
-            setError("This PDF has no readable text to summarize.");
-            return;
-        }
-
-        if (text.length > 50000) {
-            setError("This PDF is too long for the current summary feature.");
-            return;
-        }
-
-        setIsLoading(true);
-        setError("");
-        setSummary("");
-
-        try {
-            const response = await fetch("/api/summarize", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Could not summarize the PDF. Please try again.");
-            }
-
-            const data = await response.json();
-
-            if (typeof data.summary !== "string" || !data.summary.trim()) {
-                throw new Error("The service returned an invalid summary.");
-            }
-
-            setSummary(data.summary.trim());
-        } catch (error) {
-            setError(
-                error instanceof Error
-                    ? error.message
-                    : "Could not connect to the summary service."
-            );
-        } finally {
-            setIsLoading(false);
-        }
+    if (!text) {
+      setError("This PDF has no readable text to summarize.");
+      return;
     }
 
-    return (
-        <section className="summary-panel">
-            <button onClick={summarizePdf} disabled={isLoading}>
-                {isLoading ? "Summarizing..." : "Summarize PDF"}
+    if (text.length > 50000) {
+      setError("This PDF is too long for the current summary feature.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setSummary("");
+    setIsExpanded(false);
+
+    try {
+      const response = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not summarize the PDF. Please try again.");
+      }
+
+      const data = await response.json();
+
+      if (typeof data.summary !== "string" || !data.summary.trim()) {
+        throw new Error("The service returned an invalid summary.");
+      }
+
+      setSummary(data.summary.trim());
+      setIsExpanded(true);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Could not connect to the summary service.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  
+return (
+    <section className="summary-panel">
+        <div className="summary-header">
+            <button
+                type="button"
+                onClick={summarizePdf}
+                disabled={isLoading}
+            >
+                {isLoading
+                    ? "Summarizing..."
+                    : summary
+                        ? "Summarize again"
+                        : "Summarize PDF"}
             </button>
 
-            <p>Selected document: {book.title}</p>
+            {summary && (
+                <button
+                    type="button"
+                    className="summary-toggle"
+                    aria-expanded={isExpanded}
+                    onClick={() => setIsExpanded(!isExpanded)}
+                >
+                    {isExpanded ? "Hide summary" : "Show summary"}
+                </button>
+            )}
+        </div>
 
-            {error && <p role="alert">{error}</p>}
+        {error && (
+            <p className="summary-error" role="alert">
+                {error}
+            </p>
+        )}
 
-            <div aria-live="polite">
-                {summary && (
-                    <>
-                        <h2>Summary</h2>
-                        <p>{summary}</p>
-                    </>
-                )}
+        {summary && isExpanded && (
+            <div className="summary-content" aria-live="polite">
+                <h2>Summary</h2>
+                <p>{summary}</p>
             </div>
-        </section>
-    );
+        )}
+    </section>
+);
+
 }
 
 export default SummaryPanel;
