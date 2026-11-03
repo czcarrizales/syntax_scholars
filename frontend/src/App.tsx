@@ -8,6 +8,8 @@ import type { Book } from "./types/book";
 import { uploadPdf } from "./api/uploadPdf";
 import { validatePdfSelection } from "./utils/pdfSelection";
 
+import SummaryPanel from "./components/SummaryPanel";
+
 import "./App.css";
 
 function App() {
@@ -205,6 +207,8 @@ function App() {
           onProcess={processPdf}
           onCancel={cancelUpload}
         />
+
+        {book && <SummaryPanel book={book} />}
 
         {book && (
           <Reader
