@@ -25,28 +25,23 @@ function UploadPanel({
   onCancel,
 }: UploadPanelProps) {
   const [isDragging, setIsDragging] = useState(false)
-
-  // Prevent drag events from nested elements causing flickering.
   const dragDepth = useRef(0)
-
-  // Keep the native file input synchronized with dropped files.
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  function handleDragEnter(event: DragEvent<HTMLElement>) {
+  function handleDragEnter(event: DragEvent<HTMLDivElement>) {
     if (!event.dataTransfer.types.includes('Files')) return
 
     event.preventDefault()
-    dragDepth.current += 1
 
-    if (!isUploading) {
-      setIsDragging(true)
-    }
+    if (isUploading) return
+
+    dragDepth.current += 1
+    setIsDragging(true)
   }
 
-  function handleDragOver(event: DragEvent<HTMLElement>) {
+  function handleDragOver(event: DragEvent<HTMLDivElement>) {
     if (!event.dataTransfer.types.includes('Files')) return
 
-    // Required to allow dropping files onto this element.
     event.preventDefault()
 
     event.dataTransfer.dropEffect = isUploading
@@ -54,9 +49,7 @@ function UploadPanel({
       : 'copy'
   }
 
-  function handleDragLeave(event: DragEvent<HTMLElement>) {
-    if (!event.dataTransfer.types.includes('Files')) return
-
+  function handleDragLeave(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
 
     dragDepth.current = Math.max(0, dragDepth.current - 1)
@@ -66,78 +59,156 @@ function UploadPanel({
     }
   }
 
-  function handleDrop(event: DragEvent<HTMLElement>) {
-    // Stop the browser from opening the dropped PDF.
+  function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
 
     dragDepth.current = 0
     setIsDragging(false)
 
-    // Don't replace the file during an active upload.
     if (isUploading) return
 
     const droppedFiles = Array.from(event.dataTransfer.files)
 
-    // Clear the native file picker so its displayed filename
-    // cannot disagree with the newly dropped file.
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
 
-    // The same handler is used by the normal file picker.
     onFilesSelected(droppedFiles)
   }
 
-  return (
-    <section
-      className={`upload-panel${isDragging ? ' drag-active' : ''}`}
-      aria-label="PDF upload area with drag and drop"
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".pdf,application/pdf"
-        disabled={isUploading}
-        onChange={(event) => {
-          onFilesSelected(
-            Array.from(event.target.files ?? [])
-          )
-        }}
-      />
-
-      <span className="drop-hint">
-        or drag a PDF here
-      </span>
-
-      <button
-        onClick={onProcess}
-        disabled={isUploading}
+  
+  // Show a compact document bar after successful processing.
+  if (book) {
+    return (
+      <section
+        className="upload-panel upload-panel--compact"
+        aria-label="Current document"
       >
-        {isUploading ? 'Processing...' : 'Process PDF'}
-      </button>
+        <span className="current-document-name" title={book.title}>
+          {book.title}
+        </span>
 
-      {isUploading && (
+        <input
+          ref={fileInputRef}
+          id="pdf-file-input"
+          className="file-picker-input"
+          type="file"
+          accept=".pdf,application/pdf"
+          disabled={isUploading}
+          onChange={(event) => {
+            const files = Array.from(event.currentTarget.files ?? [])
+            event.currentTarget.value = ''
+
+            if (files.length > 0) {
+              onFilesSelected(files)
+            }
+          }}
+        />
+
+        <label htmlFor="pdf-file-input" className="file-picker-button">
+          Change PDF
+        </label>
+      </section>
+    )
+  }
+
+
+  return (
+    <section className="upload-panel">
+      <header className="upload-heading">
+        <h2>Syntax Scholars</h2>
+        <p>Turn PDFs into a more accessible reading experience.</p>
+      </header>
+
+      <div
+        className={[
+          'upload-dropzone',
+          isDragging ? 'drag-active' : '',
+          isUploading ? 'upload-disabled' : '',
+        ].filter(Boolean).join(' ')}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <input
+          ref={fileInputRef}
+          id="pdf-file-input"
+          className="file-picker-input"
+          type="file"
+          accept=".pdf,application/pdf"
+          disabled={isUploading}
+          onChange={(event) => {
+            onFilesSelected(
+              Array.from(event.currentTarget.files ?? [])
+            )
+
+            // Allow reselecting the same file.
+            event.currentTarget.value = ''
+          }}
+        />
+
+        {file ? (
+          <div className="selected-file-row">
+            <span className="selected-file-name" title={file.name}>
+              {file.name}
+            </span>
+
+            <label
+              htmlFor="pdf-file-input"
+              className="file-picker-button"
+            >
+              Change PDF
+            </label>
+          </div>
+        ) : (
+          <div className="empty-dropzone">
+            <span className="drop-title">
+              Drop a PDF here
+            </span>
+
+            <label
+              htmlFor="pdf-file-input"
+              className="file-picker-button"
+            >
+              Choose PDF
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div className="upload-actions">
         <button
           type="button"
-          className="cancel-button"
-          onClick={onCancel}
+          className="process-button"
+          onClick={onProcess}
+          disabled={!file || isUploading}
         >
-          Cancel
+          {isUploading ? 'Processing...' : 'Process PDF'}
         </button>
-      )}
 
-      {file && (
-        <p>
-          {file.name}
-          {book && ` — ${book.page_count} pages`}
+        {isUploading && (
+          <button
+            type="button"
+            className="cancel-button"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+        )}
+
+        {book && (
+          <span className="upload-page-count">
+            {book.page_count} pages
+          </span>
+        )}
+      </div>
+
+      {message && !isUploading && (
+        <p className="upload-message" role="status">
+          {message}
         </p>
       )}
-
-      {message && <p role="status">{message}</p>}
     </section>
   )
 }
