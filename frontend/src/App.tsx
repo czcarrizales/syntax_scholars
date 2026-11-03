@@ -10,32 +10,37 @@ import { uploadPdf } from "./api/uploadPdf";
 import "./App.css";
 
 function App() {
-  const [file, setFile] = useState<File | null>(null);
-  const [book, setBook] = useState<Book | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [message, setMessage] = useState("");
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [file, setFile] = useState<File | null>(null)
+  const [book, setBook] = useState<Book | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [message, setMessage] = useState('')
+  const [isSpeaking, setIsSpeaking] = useState(false)
 
-  
-function handleFileChange(newFile: File | null) {
-  // Update the selected PDF
-  setFile(newFile);
+  // Stores the voices and the selected voice and speech rate
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [selectedVoice, setSelectedVoice] = useState('')
+  const [speechRate, setSpeechRate] = useState(1)
 
-  // Remove the previously processed document
-  setBook(null);
+  // Load the voices available in the browser and set the default voice if none is selected
+  useEffect(() => {
+    function loadVoices() {
+      const availableVoices = window.speechSynthesis.getVoices()
+      setVoices(availableVoices)
 
-  // Reset page navigation
-  setCurrentPage(0);
+      // Ensures that speech has a default voice before user selection
+      if (availableVoices.length > 0 && !selectedVoice) {
+        setSelectedVoice(availableVoices[0].name)
+      }
+    }
 
-  // Clear any error or status message
-  setMessage("");
+    loadVoices()
 
-  // Stop speech from the previous document
-  window.speechSynthesis.cancel();
-  setIsSpeaking(false);
-}
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
 
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices)
+    }
+  }, [selectedVoice])
 
   async function processPdf() {
     if (!file) {
@@ -79,51 +84,52 @@ function handleFileChange(newFile: File | null) {
 
   function toggleSpeech() {
     if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+      return
     }
 
-    if (!book) return;
+    if (!book) return
 
-    const text = book.pages[currentPage]?.text;
-    if (!text) return;
+    const text = book.pages[currentPage]?.text
+    if (!text) return
 
-    const speech = new SpeechSynthesisUtterance(text);
+    const speech = new SpeechSynthesisUtterance(text)
 
-    const voices = window.speechSynthesis.getVoices();
+    // Matches the user selected voice to an available voice in the browser  
+    const voice = voices.find(
+      (voice) => voice.name === selectedVoice
+    )
 
-    const preferredVoice = voices.find(
-      (voice) => voice.name === "Google UK English Male",
-    );
-
-    if (preferredVoice) {
-      speech.voice = preferredVoice;
+    if (voice) {
+      speech.voice = voice
     }
 
-    speech.rate = 0.95;
-    speech.pitch = 1;
+    speech.rate = speechRate
+    speech.pitch = 1
 
+    // Keeps the UI synchronized when the speech ends or encounters an error
     speech.onend = () => {
-      setIsSpeaking(false);
-    };
+      setIsSpeaking(false)
+    }
 
     speech.onerror = () => {
-      setIsSpeaking(false);
-    };
+      setIsSpeaking(false)
+    }
 
-    setIsSpeaking(true);
-    window.speechSynthesis.speak(speech);
+    setIsSpeaking(true)
+    window.speechSynthesis.speak(speech)
   }
 
+  // Cancels any ongoing speech when the current page changes
   useEffect(() => {
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
+    window.speechSynthesis.cancel()
+    setIsSpeaking(false)
 
     return () => {
-      window.speechSynthesis.cancel();
-    };
-  }, [currentPage]);
+      window.speechSynthesis.cancel()
+    }
+  }, [currentPage])
 
   return (
     <div className="app-layout">
@@ -148,9 +154,14 @@ function handleFileChange(newFile: File | null) {
             book={book}
             currentPage={currentPage}
             isSpeaking={isSpeaking}
+            voices={voices}
+            selectedVoice={selectedVoice}
+            speechRate={speechRate}
             onPrevious={previousPage}
             onNext={nextPage}
             onToggleSpeech={toggleSpeech}
+            onVoiceChange={setSelectedVoice}
+            onRateChange={setSpeechRate}
           />
         )}
       </main>
