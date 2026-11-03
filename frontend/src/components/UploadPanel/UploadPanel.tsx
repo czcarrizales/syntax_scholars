@@ -8,6 +8,7 @@ type UploadPanelProps = {
   isUploading: boolean;
   onFileChange: (file: File | null) => void;
   onProcess: () => void;
+  onCancel: () => void;
 };
 
 function UploadPanel({
@@ -17,6 +18,7 @@ function UploadPanel({
   isUploading,
   onFileChange,
   onProcess,
+  onCancel,
 }: UploadPanelProps) {
   return (
     <section className="upload-panel">
@@ -32,6 +34,12 @@ function UploadPanel({
       <button onClick={onProcess} disabled={isUploading}>
         {isUploading ? "Processing..." : "Process PDF"}
       </button>
+
+      {isUploading && (
+        <button type="button" className="cancel-button" onClick={onCancel}>
+          Cancel
+        </button>
+      )}
 
       {file && (
         <p>
