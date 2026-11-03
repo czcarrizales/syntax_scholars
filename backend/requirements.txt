@@ -1,2 +1,3 @@
 fastapi[standard]
 pymupdf
+google-genai
