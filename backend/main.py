@@ -61,21 +61,37 @@ async def upload_pdf(file: UploadFile = File(...)):
         # Extract text from each page
         pages = []
 
+
         for page_number, page in enumerate(document):
             pages.append({
                 "page": page_number + 1,
                 "text": page.get_text()
             })
 
+        # Read the PDF's bookmarks for chapter and lesson navigation.
+        table_of_contents = []
+
+        for level, title, page_number in document.get_toc():
+            if 1 <= page_number <= len(pages):
+                table_of_contents.append({
+                    "level": level,
+                    "title": title,
+                    "page": page_number
+                })
+
     finally:
         # Always release the PDF resource
         document.close()
 
+
+    
     return {
         "title": file.filename,
         "page_count": len(pages),
-        "pages": pages
+        "pages": pages,
+        "table_of_contents": table_of_contents
     }
+
 
 
 class SummaryRequest(BaseModel):
