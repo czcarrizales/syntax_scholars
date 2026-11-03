@@ -38,10 +38,21 @@ async def upload_pdf(file: UploadFile = File(...)):
             "text": page.get_text()
         })
 
+    toc = []
+
+    for level, title, page_number in document.get_toc():
+        if 1 <= page_number <= len(pages):
+            toc.append({
+                "level": level,
+                "title": title,
+                "page": page_number
+            })
+    
     document.close()
 
     return {
         "title": file.filename,
         "page_count": len(pages),
-        "pages": pages
+        "pages": pages,
+        "toc": toc
     }
