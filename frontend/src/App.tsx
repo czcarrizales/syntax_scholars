@@ -6,6 +6,7 @@ import Reader from "./components/Reader/Reader";
 
 import type { Book } from "./types/book";
 import { uploadPdf } from "./api/uploadPdf";
+import { validatePdfSelection } from "./utils/pdfSelection";
 
 import "./App.css";
 
@@ -44,12 +45,20 @@ function App() {
     };
   }, [selectedVoice]);
 
-  function handleFileChange(newFile: File | null) {
-    setFile(newFile);
+  function handleFileSelection(files: File[]) {
+    // Validate files from either the picker or drag-and-drop.
+    const selection = validatePdfSelection(files);
+
+    setFile(selection.file);
+
+    // Clear the previous document and its state.
     setBook(null);
     setCurrentPage(0);
-    setMessage("");
 
+    // Display a validation error, if one occurred.
+    setMessage(selection.error);
+
+    // Stop speech from the previous document.
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   }
@@ -192,7 +201,7 @@ function App() {
           book={book}
           message={message}
           isUploading={isUploading}
-          onFileChange={handleFileChange}
+          onFilesSelected={handleFileSelection}
           onProcess={processPdf}
           onCancel={cancelUpload}
         />
