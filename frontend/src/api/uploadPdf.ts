@@ -12,7 +12,8 @@ function isObject(value: unknown): value is Record<string, unknown> {
   )
 }
 
-// Validate the backend's Book response.
+// Check that the backend actually sent what we're
+// expecting before trying to use it.
 function isBook(value: unknown): value is Book {
   if (!isObject(value)) return false
 
@@ -40,7 +41,8 @@ function isBook(value: unknown): value is Book {
   )
 }
 
-// Distinguish a timeout from user cancellation.
+// Give a different message depending on whether
+// the user cancelled or the upload took too long.
 function getAbortError(signal: AbortSignal): Error {
   if (signal.reason === 'timeout') {
     return new Error(
@@ -109,10 +111,11 @@ export async function uploadPdf(
       )
     }
 
-    // A late response must not be accepted after cancellation.
-    if (requestController.signal.aborted) {
-      throw getAbortError(requestController.signal)
-    }
+// Even if an old request somehow finishes after
+// being cancelled, we shouldn't use its response.
+if (requestController.signal.aborted) {
+  throw getAbortError(requestController.signal)
+}
 
     let data: unknown
 
@@ -152,9 +155,9 @@ export async function uploadPdf(
     }
 
     return data
-  } finally {
-    // Clean up the timer and cancellation listener.
-    clearTimeout(timeoutId)
-    signal?.removeEventListener('abort', abortFromCaller)
-  }
+} finally {
+  // Clean up the timer and listener once we're done.
+  clearTimeout(timeoutId)
+  signal?.removeEventListener('abort', abortFromCaller)
+}
 }

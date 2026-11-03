@@ -51,7 +51,8 @@ function App() {
 
     setFile(selection.file);
 
-    // Clear the previous document and its state.
+    // Clear out the previous PDF so we don't end up
+    // showing stuff from the old one.
     setBook(null);
     setCurrentPage(0);
 
@@ -83,7 +84,8 @@ function App() {
       // Pass the cancellation signal to our API utility.
       const data = await uploadPdf(file, controller.signal);
 
-      // Ignore results from cancelled or outdated requests.
+      // If the upload was cancelled, don't let an old
+      // response come back and replace the current PDF.
       if (
         uploadControllerRef.current !== controller ||
         controller.signal.aborted
@@ -95,7 +97,8 @@ function App() {
       setCurrentPage(0);
       setMessage("");
     } catch (error) {
-      // A cancelled request must not overwrite a newer result.
+// Same thing with errors. We don't want an old
+  // request showing an error after it's been cancelled.
       if (uploadControllerRef.current !== controller) {
         return;
       }
@@ -119,8 +122,9 @@ function App() {
 
     if (!controller) return;
 
-    // Mark this request as inactive immediately.
-    uploadControllerRef.current = null;
+    // Mark the upload as inactive first so anything
+// that comes back afterward gets ignored.
+uploadControllerRef.current = null;
 
     // Abort the request.
     controller.abort();

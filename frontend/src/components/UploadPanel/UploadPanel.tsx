@@ -25,6 +25,8 @@ function UploadPanel({
   onCancel,
 }: UploadPanelProps) {
   const [isDragging, setIsDragging] = useState(false)
+  // Drag events can fire multiple times when moving
+// over stuff inside the box. This keeps it from flickering.
   const dragDepth = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -68,7 +70,8 @@ function UploadPanel({
     if (isUploading) return
 
     const droppedFiles = Array.from(event.dataTransfer.files)
-
+// Clear the file picker so it doesn't keep
+// an older file selected.
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -77,8 +80,9 @@ function UploadPanel({
   }
 
   
-  // Show a compact document bar after successful processing.
-  if (book) {
+// Once the PDF is ready, shrink the upload section
+// so there's more room for actually reading.
+if (book) {
     return (
       <section
         className="upload-panel upload-panel--compact"
