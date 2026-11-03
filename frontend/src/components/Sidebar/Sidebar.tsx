@@ -22,7 +22,8 @@ function Sidebar({
           <p>{book.page_count} pages</p>
 
           <div className="page-list">
-            {(book.toc ?? []).map((entry, index) => (
+            {/* Display PDF bookmarks as clickable chapter and lesson titles. */}
+            {(book.table_of_contents ?? []).map((entry, index) => (
               <button
                 key={`toc-${index}`}
                 className="page-item"

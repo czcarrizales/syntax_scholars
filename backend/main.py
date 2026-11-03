@@ -38,11 +38,12 @@ async def upload_pdf(file: UploadFile = File(...)):
             "text": page.get_text()
         })
 
-    toc = []
+    # Read the PDF's bookmarks for chapter and lesson navigation.
+    table_of_contents = []
 
     for level, title, page_number in document.get_toc():
         if 1 <= page_number <= len(pages):
-            toc.append({
+            table_of_contents.append({
                 "level": level,
                 "title": title,
                 "page": page_number
@@ -54,5 +55,5 @@ async def upload_pdf(file: UploadFile = File(...)):
         "title": file.filename,
         "page_count": len(pages),
         "pages": pages,
-        "toc": toc
+        "table_of_contents": table_of_contents
     }
