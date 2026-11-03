@@ -140,3 +140,24 @@
     margin-top: 0;
   }
 }
+
+.upload-panel button.cancel-button {
+  background: transparent;
+  color: #6f50c4;
+  border: 1px solid #bba9df;
+  box-shadow: none;
+}
+
+.upload-panel button.cancel-button:hover {
+  background: rgba(144, 115, 223, 0.1);
+  box-shadow: none;
+}
+
+.upload-panel button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-panel button:disabled:hover {
+  transform: none;
+}
