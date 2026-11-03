@@ -161,3 +161,32 @@
 .upload-panel button:disabled:hover {
   transform: none;
 }
+
+
+/* Highlight the upload panel while dragging a PDF over it. */
+.upload-panel.drag-active {
+  border: 2px dashed #8160d4;
+  background: #f0eafb;
+  box-shadow: 0 0 0 3px rgba(129, 96, 212, 0.12);
+}
+
+/* Temporarily update the panel description during a drag. */
+.upload-panel.drag-active::after {
+  content: "Release to select your PDF.";
+  color: #6f50c4;
+}
+
+/* Small instruction beside the existing file picker. */
+.upload-panel .drop-hint {
+  margin-top: 58px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Keep the hint aligned in narrower layouts. */
+@media (max-width: 900px) {
+  .upload-panel .drop-hint {
+    margin-top: 0;
+  }
+}
