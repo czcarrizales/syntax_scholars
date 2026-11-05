@@ -18,9 +18,20 @@ padding: 16px;
     position: relative;
 }
 
+
+/* Keep the document heading available to screen readers. */
 .reader > h2 {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
+
 
 .reading-page {
   position: relative;

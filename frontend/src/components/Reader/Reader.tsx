@@ -4,6 +4,7 @@ import "./Reader.css";
 import { useEffect, useState, useRef } from "react";
 import ReaderSearch from "./ReaderSearch";
 import ReaderTextSettings from "./ReaderTextSettings";
+import { shouldIgnoreReaderShortcut } from "../../utils/readerShortcuts";
 
 type ReaderProps = {
   book: Book;
@@ -83,6 +84,38 @@ function Reader({
     readingPageRef.current?.scrollTo({ top: 0 });
     onPageChange(pageIndex);
   }
+
+  // Let readers change pages without using the mouse.
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (
+        shouldIgnoreReaderShortcut(event) ||
+        event.repeat
+      ) {
+        return;
+      }
+
+      if (event.key === "ArrowLeft" && currentPage > 0) {
+        event.preventDefault();
+        onPrevious();
+      }
+
+      if (
+        event.key === "ArrowRight" &&
+        currentPage < book.pages.length - 1
+      ) {
+        event.preventDefault();
+        onNext();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentPage, book.pages.length, onPrevious, onNext]);
+
 
   return (
     <section className={`reader${isFocusMode ? " reader--focus" : ""}`}>

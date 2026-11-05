@@ -215,3 +215,9 @@
     justify-self: end;
   }
 }
+
+/* Show keyboard users which button is selected. */
+.reader-controls button:focus-visible {
+  outline: 2px solid var(--lavender-600);
+  outline-offset: 3px;
+}
