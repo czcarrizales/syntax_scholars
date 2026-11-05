@@ -19,6 +19,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const uploadControllerRef = useRef<AbortController | null>(null);
 
   // Stores the voices and the selected voice and speech rate
@@ -47,7 +48,25 @@ function App() {
     };
   }, [selectedVoice]);
 
+  // Escape lets the reader leave Focus Mode.
+  useEffect(() => {
+    if (!isFocusMode) return;
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsFocusMode(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isFocusMode]);
+
   function handleFileSelection(files: File[]) {
+    setIsFocusMode(false);
     // Validate files from either the picker or drag-and-drop.
     const selection = validatePdfSelection(files);
 
@@ -77,7 +96,7 @@ function App() {
 
     const controller = new AbortController();
     uploadControllerRef.current = controller;
-
+    setIsFocusMode(false);
     setIsUploading(true);
     setMessage("Processing PDF...");
     setBook(null);
@@ -99,8 +118,8 @@ function App() {
       setCurrentPage(0);
       setMessage("");
     } catch (error) {
-// Same thing with errors. We don't want an old
-  // request showing an error after it's been cancelled.
+      // Same thing with errors. We don't want an old
+      // request showing an error after it's been cancelled.
       if (uploadControllerRef.current !== controller) {
         return;
       }
@@ -125,8 +144,8 @@ function App() {
     if (!controller) return;
 
     // Mark the upload as inactive first so anything
-// that comes back afterward gets ignored.
-uploadControllerRef.current = null;
+    // that comes back afterward gets ignored.
+    uploadControllerRef.current = null;
 
     // Abort the request.
     controller.abort();
@@ -194,7 +213,7 @@ uploadControllerRef.current = null;
   }, [currentPage]);
 
   return (
-    <div className="app-layout">
+    <div className={`app-layout${isFocusMode ? " app-layout--focus" : ""}`}>
       <Sidebar
         book={book}
         currentPage={currentPage}
@@ -218,6 +237,7 @@ uploadControllerRef.current = null;
           <Reader
             book={book}
             currentPage={currentPage}
+            onPageChange={setCurrentPage}
             isSpeaking={isSpeaking}
             voices={voices}
             selectedVoice={selectedVoice}
@@ -227,6 +247,8 @@ uploadControllerRef.current = null;
             onToggleSpeech={toggleSpeech}
             onVoiceChange={setSelectedVoice}
             onRateChange={setSpeechRate}
+            isFocusMode={isFocusMode}
+            onToggleFocus={() => setIsFocusMode((value) => !value)}
           />
         )}
       </main>
