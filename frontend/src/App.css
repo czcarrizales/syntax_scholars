@@ -56,22 +56,31 @@
       #f8f4ec 100%);
 }
 
+
 @media (max-width: 850px) {
   .app-layout {
     width: 100%;
-    min-height: 100vh;
-
+    height: 100dvh;
+    min-height: 0;
     margin: 0;
 
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
 
     border-radius: 0;
   }
 
+  /* Focus Mode only has one visible layout section. */
+  .app-layout--focus {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
   .main-content {
-    padding: 16px;
+    min-height: 0;
+    padding: 12px;
   }
 }
+
 
 
 /* Summary panel */

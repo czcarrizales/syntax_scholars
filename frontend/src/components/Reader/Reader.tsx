@@ -1,7 +1,7 @@
 import type { Book } from "../../types/book";
 import ReaderControls from "../ReaderControls/ReaderControls";
 import "./Reader.css";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useLayoutEffect, useState, useRef } from "react";
 import ReaderSearch from "./ReaderSearch";
 import ReaderTextSettings from "./ReaderTextSettings";
 import { shouldIgnoreReaderShortcut } from "../../utils/readerShortcuts";
@@ -80,18 +80,27 @@ function Reader({
 
   const readingPageRef = useRef<HTMLElement>(null);
 
+  // Start at the top whenever the displayed page changes.
+  useLayoutEffect(() => {
+    if (readingPageRef.current) {
+      readingPageRef.current.scrollTop = 0;
+    }
+  }, [currentPage, book]);
+
   function handleSearchNavigate(pageIndex: number) {
-    readingPageRef.current?.scrollTo({ top: 0 });
+    // Clicking a search result on the current page should
+    // still return to the beginning of that page.
+    if (pageIndex === currentPage && readingPageRef.current) {
+      readingPageRef.current.scrollTop = 0;
+    }
+
     onPageChange(pageIndex);
   }
 
   // Let readers change pages without using the mouse.
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (
-        shouldIgnoreReaderShortcut(event) ||
-        event.repeat
-      ) {
+      if (shouldIgnoreReaderShortcut(event) || event.repeat) {
         return;
       }
 
@@ -100,10 +109,7 @@ function Reader({
         onPrevious();
       }
 
-      if (
-        event.key === "ArrowRight" &&
-        currentPage < book.pages.length - 1
-      ) {
+      if (event.key === "ArrowRight" && currentPage < book.pages.length - 1) {
         event.preventDefault();
         onNext();
       }
@@ -115,7 +121,6 @@ function Reader({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [currentPage, book.pages.length, onPrevious, onNext]);
-
 
   return (
     <section className={`reader${isFocusMode ? " reader--focus" : ""}`}>

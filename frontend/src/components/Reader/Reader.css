@@ -96,6 +96,7 @@ padding: 16px;
   line-height: 1.75;
 
   color: #34303d;
+  overflow-wrap: anywhere;
 }
 
 .reading-page::-webkit-scrollbar {
@@ -203,4 +204,32 @@ padding: 16px;
 
 .reader--focus .reader-controls > span {
   min-width: 0;
+}
+
+
+/* Let the toolbar wrap instead of overflowing. */
+@media (max-width: 600px) {
+  .reader {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .reader-toolbar {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+
+    margin-bottom: 8px;
+  }
+
+  .reading-page {
+    padding: 16px clamp(12px, 4vw, 24px);
+  }
+
+  /* Keep text settings within the viewport. */
+  .reader-text-settings-panel {
+    max-width: calc(100vw - 64px);
+  }
 }
