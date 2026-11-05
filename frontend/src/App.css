@@ -158,3 +158,20 @@
   margin: 12px 0 0;
   color: var(--coral-text);
 }
+
+
+/* Give the reader the full layout in Focus Mode */
+.app-layout--focus {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Hide everything that isn't needed while reading */
+.app-layout--focus .sidebar,
+.app-layout--focus .upload-panel,
+.app-layout--focus .summary-panel {
+  display: none;
+}
+
+.app-layout--focus .main-content {
+  padding: 14px;
+}

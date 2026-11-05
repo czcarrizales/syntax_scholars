@@ -18,6 +18,8 @@ type ReaderProps = {
   onVoiceChange: (voiceName: string) => void;
   onRateChange: (rate: number) => void;
   onPageChange: (pageIndex: number) => void;
+  isFocusMode: boolean;
+  onToggleFocus: () => void;
 };
 
 function readSetting(
@@ -51,6 +53,8 @@ function Reader({
   onVoiceChange,
   onRateChange,
   onPageChange,
+  isFocusMode,
+  onToggleFocus,
 }: ReaderProps) {
   const [fontSize, setFontSize] = useState(() =>
     readSetting("syntax-scholars-font-size", 20, [16, 18, 20, 22, 24, 26, 28]),
@@ -81,18 +85,33 @@ function Reader({
   }
 
   return (
-    <section className="reader">
+    <section className={`reader${isFocusMode ? " reader--focus" : ""}`}>
       <h2>{displayTitle}</h2>
-      <div className="reader-toolbar">
-        <ReaderSearch book={book} onNavigate={handleSearchNavigate} />
 
-        <ReaderTextSettings
-          fontSize={fontSize}
-          lineSpacing={lineSpacing}
-          onFontSizeChange={setFontSize}
-          onLineSpacingChange={setLineSpacing}
-        />
+      <div className="reader-toolbar">
+        {!isFocusMode && (
+          <>
+            <ReaderSearch book={book} onNavigate={handleSearchNavigate} />
+
+            <ReaderTextSettings
+              fontSize={fontSize}
+              lineSpacing={lineSpacing}
+              onFontSizeChange={setFontSize}
+              onLineSpacingChange={setLineSpacing}
+            />
+          </>
+        )}
+
+        <button
+          type="button"
+          className="reader-focus-button"
+          aria-pressed={isFocusMode}
+          onClick={onToggleFocus}
+        >
+          {isFocusMode ? "Exit Focus" : "Focus Mode"}
+        </button>
       </div>
+
       <ReaderControls
         currentPage={currentPage}
         totalPages={book.pages.length}

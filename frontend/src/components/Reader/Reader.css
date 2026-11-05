@@ -125,10 +125,71 @@ padding: 16px;
   right: auto;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1250px) {
   .reader-toolbar {
     position: static;
     justify-content: flex-end;
     margin-bottom: 8px;
   }
+}
+
+
+/* Focus Mode button */
+.reader-focus-button {
+  min-height: 40px;
+  padding: 0 16px;
+
+  background: var(--lavender-100);
+  border: 1px solid var(--lavender-200);
+  border-radius: 10px;
+
+  color: var(--navy);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reader-focus-button:hover {
+  background: var(--lavender-200);
+}
+
+.reader-focus-button:focus-visible {
+  outline: 2px solid var(--lavender-600);
+  outline-offset: 2px;
+}
+
+/* Make the reading area the priority */
+.reader--focus {
+  margin-top: 0;
+}
+
+/* Keep the Exit Focus button visible */
+.reader--focus .reader-toolbar {
+  position: static;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+/* Keep page navigation and Play/Stop */
+.reader--focus .reader-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+/* Voice and speed settings return outside Focus Mode */
+.reader--focus .reader-controls .speech-options {
+  display: none;
+}
+
+.reader--focus .reader-controls > .speech-button {
+  margin-left: auto;
+}
+
+.reader--focus .reader-controls > span {
+  min-width: 0;
 }
