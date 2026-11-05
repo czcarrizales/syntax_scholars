@@ -99,8 +99,8 @@ function App() {
       setCurrentPage(0);
       setMessage("");
     } catch (error) {
-// Same thing with errors. We don't want an old
-  // request showing an error after it's been cancelled.
+      // Same thing with errors. We don't want an old
+      // request showing an error after it's been cancelled.
       if (uploadControllerRef.current !== controller) {
         return;
       }
@@ -125,8 +125,8 @@ function App() {
     if (!controller) return;
 
     // Mark the upload as inactive first so anything
-// that comes back afterward gets ignored.
-uploadControllerRef.current = null;
+    // that comes back afterward gets ignored.
+    uploadControllerRef.current = null;
 
     // Abort the request.
     controller.abort();
@@ -218,6 +218,7 @@ uploadControllerRef.current = null;
           <Reader
             book={book}
             currentPage={currentPage}
+            onPageChange={setCurrentPage}
             isSpeaking={isSpeaking}
             voices={voices}
             selectedVoice={selectedVoice}

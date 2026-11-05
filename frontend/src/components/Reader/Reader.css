@@ -15,6 +15,7 @@ padding: 16px;
 
   box-shadow:
     0 10px 30px rgba(82, 68, 113, 0.07);
+    position: relative;
 }
 
 .reader > h2 {
@@ -103,5 +104,31 @@ padding: 16px;
 
   .reading-page {
     padding: 36px 24px;
+  }
+}
+
+/* Search and text settings share the same area */
+.reader-toolbar {
+  position: absolute;
+  top: 32px;
+  right: 16px;
+  z-index: 10;
+
+  display: flex;
+  gap: 8px;
+}
+
+/* Let the search component sit inside the toolbar */
+.reader-toolbar .reader-search {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+
+@media (max-width: 1100px) {
+  .reader-toolbar {
+    position: static;
+    justify-content: flex-end;
+    margin-bottom: 8px;
   }
 }
