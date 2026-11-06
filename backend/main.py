@@ -61,7 +61,6 @@ async def upload_pdf(file: UploadFile = File(...)):
         # Extract text from each page
         pages = []
 
-
         for page_number, page in enumerate(document):
             pages.append({
                 "page": page_number + 1,
@@ -83,8 +82,6 @@ async def upload_pdf(file: UploadFile = File(...)):
         # Always release the PDF resource
         document.close()
 
-
-    
     return {
         "title": file.filename,
         "page_count": len(pages),
@@ -93,9 +90,8 @@ async def upload_pdf(file: UploadFile = File(...)):
     }
 
 
-
 class SummaryRequest(BaseModel):
-    text: str = Field(min_length=1, max_length=50000)
+    text: str = Field(min_length=1)
 
 
 @app.post("/api/summarize")
