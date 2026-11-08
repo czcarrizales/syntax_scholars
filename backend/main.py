@@ -4,6 +4,10 @@ import os
 from google import genai
 from pydantic import BaseModel, Field
 from google.genai import types as genai_types
+from io import BytesIO
+from docx import Document
+from fastapi.responses import Response
+
 
 app = FastAPI()
 
@@ -94,6 +98,12 @@ class SummaryRequest(BaseModel):
     text: str = Field(min_length=1)
 
 
+# defines what frontend will send to save
+class WordExportRequest(BaseModel):
+    title: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+
+
 @app.post("/api/summarize")
 def summarize_pdf(request: SummaryRequest):
     text = request.text.strip()
@@ -157,3 +167,35 @@ def summarize_pdf(request: SummaryRequest):
         )
 
     return {"summary": summary}
+
+
+@app.post("/api/export-word")
+def export_word(request: WordExportRequest):
+    title = request.title.strip()
+    text = request.text.strip()
+
+    if not title or not text:
+        raise HTTPException(
+            status_code=400,
+            detail="A title and text are required."
+        )
+
+    document = Document()
+    document.add_heading(title, level=1)
+
+    for line in text.splitlines():
+        document.add_paragraph(line)
+
+    output = BytesIO()
+    document.save(output)
+
+    return Response(
+        content=output.getvalue(),
+        media_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "wordprocessingml.document"
+        ),
+        headers={
+            "Content-Disposition": 'attachment; filename="document.docx"'
+        }
+    )

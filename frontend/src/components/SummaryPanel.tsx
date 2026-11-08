@@ -1,5 +1,6 @@
 import type { Book } from "../types/book";
 import { useState } from "react";
+import { exportWord } from "../api/exportWord";
 
 type SummaryPanelProps = {
     book: Book;
@@ -13,8 +14,41 @@ function SummaryPanel({ book }: SummaryPanelProps) {
     const [startPage, setStartPage] = useState(1);
     const [endPage, setEndPage] = useState(book.pages.length);
 
+    const [summaryFilename, setSummaryFilename] = useState(
+        `${book.title.replace(/\.pdf$/i, "")}-summary`
+    );
+    const [isSavingSummary, setIsSavingSummary] = useState(false);
+
+    async function saveSummary() {
+        if (!summary || isSavingSummary || isLoading) return;
+
+        if (!summaryFilename.trim()) {
+            setError("Please enter a filename for the summary.");
+            return;
+        }
+
+        setIsSavingSummary(true);
+        setError("");
+
+        try {
+            await exportWord(
+                `Summary of ${book.title}`,
+                summary,
+                summaryFilename
+            );
+        } catch (error) {
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : "Could not save the summary."
+            );
+        } finally {
+            setIsSavingSummary(false);
+        }
+    }
+
     async function summarizePdf() {
-        if (isLoading) return;
+        if (isLoading || isSavingSummary) return;
 
         if (
             !Number.isInteger(startPage) ||
@@ -34,10 +68,9 @@ function SummaryPanel({ book }: SummaryPanelProps) {
             .trim();
 
         if (!text) {
-            setError("The selected pages have no readable text to summarize."); return;
+            setError("The selected pages have no readable text to summarize.");
+            return;
         }
-
-
 
         setIsLoading(true);
         setError("");
@@ -67,13 +100,12 @@ function SummaryPanel({ book }: SummaryPanelProps) {
             setError(
                 error instanceof Error
                     ? error.message
-                    : "Could not connect to the summary service.",
+                    : "Could not connect to the summary service."
             );
         } finally {
             setIsLoading(false);
         }
     }
-
 
     return (
         <section className="summary-panel">
@@ -86,7 +118,7 @@ function SummaryPanel({ book }: SummaryPanelProps) {
                             min={1}
                             max={book.pages.length}
                             value={startPage}
-                            disabled={isLoading}
+                            disabled={isLoading || isSavingSummary}
                             onChange={(event) =>
                                 setStartPage(Number(event.target.value))
                             }
@@ -100,7 +132,7 @@ function SummaryPanel({ book }: SummaryPanelProps) {
                             min={1}
                             max={book.pages.length}
                             value={endPage}
-                            disabled={isLoading}
+                            disabled={isLoading || isSavingSummary}
                             onChange={(event) =>
                                 setEndPage(Number(event.target.value))
                             }
@@ -111,7 +143,7 @@ function SummaryPanel({ book }: SummaryPanelProps) {
                 <button
                     type="button"
                     onClick={summarizePdf}
-                    disabled={isLoading}
+                    disabled={isLoading || isSavingSummary}
                 >
                     {isLoading
                         ? "Summarizing..."
@@ -138,6 +170,31 @@ function SummaryPanel({ book }: SummaryPanelProps) {
                 </p>
             )}
 
+            {summary && (
+                <div className="summary-export">
+                    <label>
+                        Summary filename:
+                        <input
+                            type="text"
+                            value={summaryFilename}
+                            disabled={isSavingSummary}
+                            onChange={(event) =>
+                                setSummaryFilename(event.target.value)
+                            }
+                            placeholder="Enter a filename"
+                        />
+                    </label>
+
+                    <button
+                        type="button"
+                        onClick={saveSummary}
+                        disabled={isSavingSummary || isLoading}
+                    >
+                        {isSavingSummary ? "Saving..." : "Save"}
+                    </button>
+                </div>
+            )}
+
             {summary && isExpanded && (
                 <div className="summary-content" aria-live="polite">
                     <h2>Summary</h2>
@@ -146,7 +203,6 @@ function SummaryPanel({ book }: SummaryPanelProps) {
             )}
         </section>
     );
-
 }
 
 export default SummaryPanel;
