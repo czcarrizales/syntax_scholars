@@ -9,12 +9,16 @@ import { uploadPdf } from "./api/uploadPdf";
 import { validatePdfSelection } from "./utils/pdfSelection";
 
 import SummaryPanel from "./components/SummaryPanel";
+import { exportWord } from "./api/exportWord";
 
 import "./App.css";
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [book, setBook] = useState<Book | null>(null);
+  const [documentFilename, setDocumentFilename] = useState("");
+  const [isSavingDocument, setIsSavingDocument] = useState(false);
+  const [documentSaveError, setDocumentSaveError] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [message, setMessage] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -83,6 +87,43 @@ function App() {
     // Stop speech from the previous document.
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+  }
+
+  async function saveProcessedText() {
+    if (!book || isSavingDocument) return;
+
+    if (!documentFilename.trim()) {
+      setDocumentSaveError("Please enter a filename.");
+      return;
+    }
+
+    const text = book.pages
+      .map((page) => `Page ${page.page}\n\n${page.text}`)
+      .join("\n\n");
+
+    if (!book.pages.some((page) => page.text.trim())) {
+      setDocumentSaveError("This document has no readable text to save.");
+      return;
+    }
+
+    setIsSavingDocument(true);
+    setDocumentSaveError("");
+
+    try {
+      await exportWord(
+        book.title.replace(/\.pdf$/i, ""),
+        text,
+        documentFilename
+      );
+    } catch (error) {
+      setDocumentSaveError(
+        error instanceof Error
+          ? error.message
+          : "Could not save the processed text."
+      );
+    } finally {
+      setIsSavingDocument(false);
+    }
   }
 
   async function processPdf() {
@@ -230,6 +271,35 @@ function App() {
           onProcess={processPdf}
           onCancel={cancelUpload}
         />
+
+        {book && (
+          <section className="document-export">
+            <label>
+              Processed text filename:
+              <input
+                type="text"
+                value={documentFilename}
+                disabled={isSavingDocument}
+                onChange={(event) =>
+                  setDocumentFilename(event.target.value)
+                }
+                placeholder="Enter a filename"
+              />
+            </label>
+
+            <button
+              type="button"
+              onClick={saveProcessedText}
+              disabled={isSavingDocument}
+            >
+              {isSavingDocument ? "Saving..." : "Save"}
+            </button>
+
+            {documentSaveError && (
+              <p role="alert">{documentSaveError}</p>
+            )}
+          </section>
+        )}
 
         {book && <SummaryPanel book={book} />}
 
