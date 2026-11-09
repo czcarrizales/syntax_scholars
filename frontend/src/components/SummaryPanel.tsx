@@ -1,12 +1,24 @@
 import type { Book } from "../types/book";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { exportWord } from "../api/exportWord";
 
 type SummaryPanelProps = {
     book: Book;
+    voices: SpeechSynthesisVoice[];
+    selectedVoice: string;
+    speechRate: number;
+    isPageSpeaking: boolean;
+    onSummaryStart: () => void;
 };
 
-function SummaryPanel({ book }: SummaryPanelProps) {
+function SummaryPanel({
+    book,
+    voices,
+    selectedVoice,
+    speechRate,
+    isPageSpeaking,
+    onSummaryStart,
+}: SummaryPanelProps) {
     const [summary, setSummary] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
@@ -18,6 +30,66 @@ function SummaryPanel({ book }: SummaryPanelProps) {
         `${book.title.replace(/\.pdf$/i, "")}-summary`
     );
     const [isSavingSummary, setIsSavingSummary] = useState(false);
+    const [isReadingSummary, setIsReadingSummary] = useState(false);
+    const summarySpeechRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+    function toggleSummarySpeech() {
+        if (summarySpeechRef.current) {
+            summarySpeechRef.current = null;
+            window.speechSynthesis.cancel();
+            setIsReadingSummary(false);
+            return;
+        }
+
+        if (!summary.trim()) return;
+
+        onSummaryStart();
+        window.speechSynthesis.cancel();
+
+        const speech = new SpeechSynthesisUtterance(summary);
+        const voice = voices.find(
+            (voice) => voice.name === selectedVoice
+        );
+
+        if (voice) {
+            speech.voice = voice;
+        }
+
+        speech.rate = speechRate;
+        speech.pitch = 1;
+
+        function finishReading() {
+            if (summarySpeechRef.current === speech) {
+                summarySpeechRef.current = null;
+                setIsReadingSummary(false);
+            }
+        }
+
+        speech.onend = finishReading;
+        speech.onerror = finishReading;
+
+        summarySpeechRef.current = speech;
+        setIsReadingSummary(true);
+        window.speechSynthesis.speak(speech);
+    }
+
+    useEffect(() => {
+        setIsReadingSummary(false);
+
+        return () => {
+            if (summarySpeechRef.current) {
+                summarySpeechRef.current = null;
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, [summary, book]);
+
+    useEffect(() => {
+        if (isPageSpeaking) {
+            summarySpeechRef.current = null;
+            setIsReadingSummary(false);
+        }
+    }, [isPageSpeaking]);
 
     async function saveSummary() {
         if (!summary || isSavingSummary || isLoading) return;
@@ -163,6 +235,17 @@ function SummaryPanel({ book }: SummaryPanelProps) {
                     </button>
                 )}
             </div>
+
+            {summary && (
+                <button
+                    type="button"
+                    onClick={toggleSummarySpeech}
+                    disabled={isLoading}
+                    aria-pressed={isReadingSummary}
+                >
+                    {isReadingSummary ? "Stop" : "Read Summary"}
+                </button>
+            )}
 
             {error && (
                 <p className="summary-error" role="alert">

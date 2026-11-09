@@ -218,6 +218,8 @@ function App() {
     const text = book.pages[currentPage]?.text;
     if (!text) return;
 
+    window.speechSynthesis.cancel();
+
     const speech = new SpeechSynthesisUtterance(text);
 
     // Matches the user selected voice to an available voice in the browser
@@ -301,7 +303,16 @@ function App() {
           </section>
         )}
 
-        {book && <SummaryPanel book={book} />}
+        {book && (
+          <SummaryPanel
+            book={book}
+            voices={voices}
+            selectedVoice={selectedVoice}
+            speechRate={speechRate}
+            isPageSpeaking={isSpeaking}
+            onSummaryStart={() => setIsSpeaking(false)}
+          />
+        )}
 
         {book && (
           <Reader
