@@ -1,0 +1,86 @@
+
+.reader-text-settings {
+  position: relative;
+}
+
+.reader-text-settings summary {
+  display: flex;
+  align-items: center;
+
+  min-height: 40px;
+  padding: 0 16px;
+
+  background: var(--lavender-100);
+  border: 1px solid var(--lavender-200);
+  border-radius: 10px;
+
+  color: var(--navy);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.reader-text-settings summary::-webkit-details-marker {
+  display: none;
+}
+
+.reader-text-settings summary:hover {
+  background: var(--lavender-200);
+}
+
+.reader-text-settings-panel {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  z-index: 20;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  width: 230px;
+  padding: 16px;
+
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  box-shadow: 0 12px 30px rgba(73, 60, 112, 0.16);
+}
+
+.reader-text-settings-panel label {
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reader-text-settings-panel select {
+  width: 100%;
+  padding: 10px;
+
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  color: var(--navy);
+  font: inherit;
+}
+
+.reader-text-settings-panel button {
+  min-height: 36px;
+  margin-top: 4px;
+
+  background: var(--lavender-100);
+  border: 1px solid var(--lavender-200);
+  border-radius: 8px;
+
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.reader-text-settings summary:focus-visible,
+.reader-text-settings select:focus-visible,
+.reader-text-settings button:focus-visible {
+  outline: 2px solid var(--lavender-600);
+  outline-offset: 2px;
+}

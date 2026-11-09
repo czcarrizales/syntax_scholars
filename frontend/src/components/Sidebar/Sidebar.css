@@ -172,16 +172,31 @@
     0 5px 14px rgba(103, 77, 164, 0.1);
 }
 
+
 @media (max-width: 850px) {
   .sidebar {
-    min-height: auto;
+    height: auto;
+    max-height: 190px;
+    min-height: 0;
+
+    padding: 14px 16px;
 
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
 
+  .sidebar h1 {
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+
+  .sidebar > p {
+    margin-bottom: 10px;
+  }
+
+  /* Long page lists remain scrollable. */
   .page-list {
-    max-height: 180px;
+    max-height: none;
   }
 
   .sidebar::after {
