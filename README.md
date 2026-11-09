@@ -1,25 +1,23 @@
+[Syntax_Scholars_README_Updated (1).md](https://github.com/user-attachments/files/34599453/Syntax_Scholars_README_Updated.1.md)
 # Syntax Scholars
 
-Syntax Scholars is a web application that turns PDF documents into a text-based reading experience. Upload a PDF, move between pages, listen with text-to-speech, search its extracted text, and adjust the reader to make longer documents more comfortable to read.
+Syntax Scholars is a web-based PDF reader that extracts text into a simpler reading layout. You can navigate pages, search, listen with text-to-speech, adjust the display, generate AI summaries, and export text to Word.
 
-The project has a **React / TypeScript / Vite frontend** and a **Python / FastAPI / PyMuPDF backend**. They run separately during local development.
+**Stack:** React, TypeScript, and Vite (frontend); Python, FastAPI, and PyMuPDF (backend). Both servers run locally during development.
 
 ## Features
 
-- **PDF upload:** Choose or drag in a PDF. The backend checks the file and extracts text one page at a time.
-- **Navigation:** Move between pages with the sidebar or Previous / Next buttons. PDF bookmarks, when available, also appear in the sidebar.
-- **Text-to-speech:** Use your browser's available voices, choose a playback speed, and play or stop the current page.
-- **Search:** Find a word or phrase in the extracted text, see matching pages and snippets, and jump to a result.
-- **Text settings:** Adjust font size and line spacing. These preferences are saved in your browser.
-- **Focus Mode:** Hide the sidebar, upload bar, summary, and extra controls so you can concentrate on reading.
-- **PDF summaries:** Generate a short summary of the extracted text through Google's Gemini API when an API key is configured.
-- **Keyboard support:** Use the Left / Right arrow keys to change pages, `/` to open search, and `Esc` to close search or leave Focus Mode.
+- **PDF processing:** Upload one PDF at a time. The custom parser identifies headings and body text, removes pages with no recognized reader text, and renumbers the remaining pages while retaining their original page references.
+- **Reader:** Navigate with the sidebar or Previous / Next buttons; search extracted text; adjust font size and line spacing; use Focus Mode.
+- **Text-to-speech:** Listen to the current page or a generated summary using voices available in your browser.
+- **Gemini summaries:** Summarize a selected range of reader pages at **Short**, **Medium**, or **Detailed** length. A Gemini API key is required during setup.
+- **Word exports:** Download extracted text or a generated summary as a `.docx` file.
 
-**Current limits:** The reader uses extractable PDF text. It does not perform OCR on scanned pages, and it does not display the original PDF's images or page formatting. Search is case-insensitive and returns one result per matching page rather than highlighting every occurrence. Password-protected PDFs are not supported. Summarization currently rejects documents whose combined extracted text exceeds **50,000 characters**. The app does not currently save books or reading progress between sessions.
+**Current limitations:** The app needs a text-based PDF; it does not perform OCR or reproduce the original images, tables, equations, or page layout. The custom parser may omit content it does not identify as readable text. Password-protected PDFs are not supported. Books and reading progress are not saved between sessions. PDF bookmark data is processed by the backend, but bookmark navigation currently has a response-field mismatch (see Troubleshooting).
 
 ## Quick start — after first-time setup
 
-Open **two terminals** from the project folder. Both servers must be running for PDF upload and processing to work.
+Open **two terminals** from the project root. Keep both running.
 
 **Terminal 1 — Backend**
 
@@ -27,7 +25,7 @@ Windows (PowerShell):
 
 ```powershell
 cd backend
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 fastapi dev main.py
 ```
 
@@ -39,7 +37,7 @@ source .venv/bin/activate
 fastapi dev main.py
 ```
 
-The backend normally runs at **http://127.0.0.1:8000**. API documentation is at **http://127.0.0.1:8000/docs**.
+Backend: http://127.0.0.1:8000 · API docs: http://127.0.0.1:8000/docs
 
 **Terminal 2 — Frontend** (all platforms):
 
@@ -48,41 +46,15 @@ cd frontend
 npm run dev
 ```
 
-Open the address printed by Vite, normally **http://localhost:5173**.
-
-> If this is your first time running the project, follow the setup instructions below before using Quick start.
+Open the URL printed by Vite, usually http://localhost:5173.
 
 ## First-time setup
 
 ### 1. Install the required tools
 
-You need **Git**, **Node.js + npm**, and **Python**.
+Install [Git](https://git-scm.com/downloads), [Node.js (LTS) with npm](https://nodejs.org/en/download), and [Python 3](https://www.python.org/downloads/).
 
-- Git: https://git-scm.com/downloads
-- Node.js (LTS): https://nodejs.org/en/download
-- Python: https://www.python.org/downloads/
-
-Check that they are available:
-
-Windows (PowerShell):
-
-```powershell
-git --version
-node --version
-npm --version
-python --version
-```
-
-If `python` isn't available on Windows, try `py --version` instead.
-
-macOS / Linux:
-
-```bash
-git --version
-node --version
-npm --version
-python3 --version
-```
+Check with `git --version`, `node --version`, `npm --version`, and `python --version` (or `python3 --version` on macOS/Linux; `py --version` may work on Windows).
 
 ### 2. Clone the repository
 
@@ -90,8 +62,6 @@ python3 --version
 git clone https://github.com/czcarrizales/syntax_scholars.git
 cd syntax_scholars
 ```
-
-The commands in the following steps start from the **project root** (`syntax_scholars/`).
 
 ### 3. Install frontend dependencies
 
@@ -101,9 +71,9 @@ npm ci
 cd ..
 ```
 
-`npm ci` installs the dependencies recorded in `package-lock.json`. Use `npm install` when you intentionally add or change dependencies.
+### 4. Set up the backend
 
-### 4. Create the backend virtual environment
+From the project root:
 
 ```bash
 cd backend
@@ -113,132 +83,100 @@ Windows (PowerShell):
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 ```
-
-Use `py -m venv .venv` if Windows recognizes `py` rather than `python`.
 
 macOS / Linux:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-A `(.venv)` prefix usually appears in the terminal after activation. The virtual environment is local to your machine and should not be committed.
-
-### 5. Install backend dependencies
-
-With the virtual environment active and your terminal in `backend/`:
-
-```bash
 python -m pip install -r requirements.txt
 ```
 
-The backend dependencies include `fastapi[standard]`, `pymupdf`, and `google-genai`.
+The requirements include FastAPI, PyMuPDF, Gemini's Python SDK, Word export support, `python-dotenv`, and `fonttools`. You only create the virtual environment once.
 
-### 6. Start both servers
+### 5. Configure Gemini (required)
 
-From here, follow [Quick start](#quick-start--after-first-time-setup). You do not need to recreate the virtual environment or reinstall packages every time you start the app.
+**Every team member running the backend locally needs a Gemini API key.** Gemini powers the project's PDF summarization feature, so configure it as part of first-time setup.
 
-## Optional: Set up Gemini PDF summaries
+1. Create your own key in [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. In the **project root** (next to `.env.example`), create a file named `.env`. You can copy `.env.example` and rename the copy.
+3. Add your key to `.env`:
 
-**You do not need a Gemini API key to upload PDFs, navigate, search, adjust text settings, or use browser text-to-speech.** The key is only required when you click **Summarize PDF**.
+   ```dotenv
+   GEMINI_API_KEY=your_key_here
+   ```
 
-1. Create a Gemini API key through [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. Set the `GEMINI_API_KEY` environment variable in the **same terminal session** you'll use to start the FastAPI backend.
-3. Start (or restart) the backend with `fastapi dev main.py`.
+4. Save the file, then start or restart the backend.
 
-Windows (PowerShell):
+The backend reads the root `.env` automatically. You do **not** need to paste the key into the terminal each time. Each teammate should use their own key. The `.env` file is ignored by Git; `.env.example` can be committed. **Never commit or share a real API key.**
 
-```powershell
-$env:GEMINI_API_KEY = Read-Host "Paste Gemini API key"
-fastapi dev main.py
-```
+When you generate a summary, the selected document text is sent to Gemini. Avoid sending private or sensitive material without permission; API usage limits or charges may apply. The app currently does not enforce a 50,000-character summary limit.
 
-macOS / Linux (bash or zsh):
+### 6. Start the app
 
-```bash
-read -s GEMINI_API_KEY
-echo
-export GEMINI_API_KEY
-fastapi dev main.py
-```
-
-For the macOS/Linux commands, paste the key when `read` is waiting for input and press Enter; the key will not be displayed. In PowerShell, `Read-Host` may echo what you type, so avoid showing or sharing terminal screenshots containing the key.
-
-**Keep the key private.** Do not put it in `main.py`, frontend code, Git commits, screenshots, or the README. These commands set the variable for the current terminal session; you may need to repeat them in a new terminal.
-
-The summary endpoint currently accepts up to **50,000 characters** of extracted text. Requests exceeding that limit are rejected by the app; the limit is not a general statement about Gemini's capacity. Google API access may have rate limits or costs depending on your account and usage. Also, selecting **Summarize PDF** sends the extracted document text to an external AI service, so avoid submitting private or sensitive material unless you have permission to do so.
+Follow [Quick start](#quick-start--after-first-time-setup). You only need to create the virtual environment and `.env` file once.
 
 ## How to use the reader
 
-1. Open the frontend in your browser.
-2. Choose a PDF or drop one into the upload area, then select **Process PDF**.
-3. Use the sidebar, **Previous**, or **Next** to move through pages.
-4. Use **Play / Stop** to listen to the current page. Available voices depend on your browser and operating system.
-5. Open **Search PDF** to find text and jump to a matching page.
-6. Open **Text settings** to change the font size and line spacing; use **Reset** for the defaults.
-7. Select **Focus Mode** to give reading more space; select **Exit Focus** to restore the normal layout.
-8. If Gemini is configured and the document meets the length limit, select **Summarize PDF**. The summary can be shown or hidden after it is generated.
-
-### Keyboard shortcuts
+1. Choose or drag in a PDF, then click **Process PDF**. You can **Cancel** an in-progress upload.
+2. Navigate using the sidebar, **Previous**, or **Next**.
+3. Use **Play / Stop** to hear the current page. Change the voice or playback speed as needed.
+4. Open **Search PDF** to find a word or phrase; use **Text settings** and **Focus Mode** to adjust your view.
+5. Select a page range and summary length, then click **Summarize PDF**. You can play or hide the result.
+6. Use **Save** to export the processed text or summary to a Word (`.docx`) file.
 
 | Shortcut | Action |
 | --- | --- |
-| `Left Arrow` | Previous page |
-| `Right Arrow` | Next page |
-| `/` | Open PDF search |
-| `Esc` | Close search or exit Focus Mode |
-| `Tab` / `Shift + Tab` | Move between controls |
-| `Enter` / `Space` | Activate a focused button |
+| `←` / `→` | Previous / next page |
+| `/` | Open search |
+| `Esc` | Close search or leave Focus Mode |
 
-Page shortcuts are ignored while typing or using form controls. Browser shortcut behavior may vary by operating system and browser.
+Page shortcuts are ignored while typing in an input.
 
 ## Project structure
 
 ```text
 syntax_scholars/
 ├── backend/
-│   ├── main.py                 # FastAPI upload and summary endpoints
-│   ├── requirements.txt        # Runtime dependencies
-│   ├── requirements-dev.txt    # Test dependencies
-│   ├── tests/                  # Backend tests
-│   └── .venv/                  # Local only; not committed
+│   ├── main.py                 # FastAPI endpoints
+│   ├── parser.py               # PDF extraction and reader pages
+│   ├── font_decoder.py         # Font text decoding
+│   ├── section_identifier.py   # Heading/section detection
+│   ├── content_identifier.py   # Body-text detection
+│   ├── requirements.txt
+│   ├── requirements-dev.txt
+│   └── tests/
 ├── frontend/
 │   ├── src/
-│   │   ├── api/                # Requests to the backend
-│   │   ├── components/
-│   │   │   ├── Reader/         # Reading area, search, text settings
-│   │   │   ├── ReaderControls/ # Page and speech controls
-│   │   │   ├── Sidebar/        # PDF bookmark and page navigation
-│   │   │   └── UploadPanel/    # File selection and upload UI
-│   │   ├── types/              # Shared frontend data types
-│   │   ├── utils/              # Validation, search, shortcuts
-│   │   ├── App.tsx             # Main application state and layout
-│   │   └── App.css
-│   ├── package.json
-│   ├── package-lock.json
-│   └── vite.config.ts          # Proxies /api requests to FastAPI
+│   │   ├── api/                # Backend requests and Word downloads
+│   │   ├── components/         # Reader, sidebar, upload, summary, controls
+│   │   ├── types/              # Reader data types
+│   │   ├── utils/              # PDF validation, search, shortcuts
+│   │   └── App.tsx
+│   └── package.json
+├── .env.example                # API key template (committed)
+├── .env                        # Your private API key (NOT committed)
 ├── .gitignore
 └── README.md
 ```
-
-The frontend also contains the summary panel component at `frontend/src/components/SummaryPanel.tsx`.
 
 ### API endpoints
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /api/hello` | Simple backend response for checking connectivity |
-| `POST /api/upload` | Accepts a PDF and returns its extracted pages and any PDF bookmarks |
-| `POST /api/summarize` | Accepts extracted text and returns a Gemini summary; requires an API key |
+| `GET /api/hello` | Check backend connectivity |
+| `POST /api/upload` | Parse an uploaded PDF into reader pages |
+| `POST /api/summarize` | Generate a Gemini summary |
+| `POST /api/export-word` | Export text as a Word document |
 
-During development, Vite proxies `/api` requests to the backend at `http://127.0.0.1:8000`.
+Vite forwards `/api` requests to the local FastAPI server on port `8000`.
 
 ## Running checks and tests
 
-**Frontend:** from `frontend/`:
+Frontend — from `frontend/`:
 
 ```bash
 npm test
@@ -246,26 +184,20 @@ npm run build
 npm run lint
 ```
 
-- `npm test` runs the Vitest tests.
-- `npm run build` checks TypeScript and builds the frontend.
-- `npm run lint` runs Oxlint.
-
-**Backend:** from `backend/` with `.venv` activated:
+Backend — from `backend/` with the virtual environment active:
 
 ```bash
 python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-The dev requirements include the runtime dependencies plus `httpx` and `pytest`. You normally only need to install them once or when the requirements change.
-
-After code changes, also do a quick browser check of upload, navigation, search, text settings, Focus Mode, and speech playback. Check summarization when an API key is available.
+Also test PDF upload, navigation, speech, summaries, and Word downloads in the browser after changes.
 
 ## Git workflow
 
 ### Before starting a feature
 
-Make sure you know which branch you're on and that your working changes are safe:
+Make sure your work is committed or stashed before switching branches:
 
 ```bash
 git status
@@ -274,126 +206,50 @@ git pull origin main
 git switch -c feature/short-description
 ```
 
-Only switch branches when your current changes are committed, stashed, or otherwise safe. If you already have a feature branch, switch to it instead of creating another one.
-
-### Save and push your changes
+### Save and push your work
 
 ```bash
 git status
 git add path/to/changed-file
-# Repeat git add for other files you intend to include.
 git commit -m "Describe what changed"
 git push -u origin feature/short-description
 ```
 
-After setting the upstream for the first time, `git push` is normally enough.
+Open a pull request into `main`. Review the changed files before merging, especially to ensure no secrets are included.
 
-Use focused commits that explain *what changed*. A commit should not mix unrelated features and cleanup if they can reasonably be separate.
+### Keep your branch updated with `main`
 
-### Keep your feature branch up to date with main
-
-Other team members will keep merging changes while you work. Regularly bring the latest `main` into your feature branch:
+While on your feature branch, with your changes safely committed or stashed:
 
 ```bash
-git status
 git fetch origin
 git merge origin/main
 ```
 
-Run those commands **while checked out on your feature branch**, with local work safely committed or stashed.
-
-- `git fetch origin` downloads remote updates but does **not** merge them into your working branch.
-- `git merge origin/main` brings the latest fetched `main` into your current branch.
-- If Git reports conflicts, open the marked files, resolve the conflicts, `git add` the resolved files, and complete the merge commit if prompted.
-- Then run the relevant tests and `git push` your branch.
-
-**Direction matters:** `git merge origin/main` while on `feature/foo` brings **main into feature/foo**. It does *not* merge `feature/foo` into main. Your feature gets into main after its pull request is reviewed and merged.
-
-### Git cheat sheet
+This merges **main into your branch**, not your branch into main. Resolve any conflicts, run checks, and push again.
 
 | Command | What it does |
 | --- | --- |
-| `git status` | Shows your branch and changes |
-| `git branch` | Lists local branches |
-| `git switch branch-name` | Switches branches |
-| `git switch -c branch-name` | Creates and switches to a new branch |
-| `git add file` | Stages a specific file |
-| `git add .` | Stages changes in the current directory and below; review first |
-| `git commit -m "message"` | Records the staged changes |
-| `git push` | Sends committed changes to GitHub |
-| `git pull` | Fetches and integrates changes for the selected upstream branch |
-| `git fetch origin` | Downloads remote branch updates without merging |
-| `git merge origin/main` | Merges the latest fetched `main` into the current branch |
-| `git log --oneline` | Shows recent commits in a compact format |
+| `git status` | Show branch and changed files |
+| `git branch` | List local branches |
+| `git switch name` | Change branches |
+| `git fetch origin` | Download remote updates without merging |
+| `git pull` | Fetch and integrate the tracked upstream branch |
+| `git merge origin/main` | Bring latest fetched `main` into your branch |
+| `git add file` | Stage one file |
+| `git commit -m "message"` | Record staged changes |
+| `git push` | Upload commits to GitHub |
 
-### After pulling updates
-
-If `frontend/package.json` or `frontend/package-lock.json` changed:
-
-```bash
-cd frontend
-npm ci
-```
-
-If `backend/requirements.txt` or `backend/requirements-dev.txt` changed, activate the virtual environment and install the relevant requirements again:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-For backend test dependencies, use `requirements-dev.txt` instead. Restart development servers when needed.
+After pulling, rerun `npm ci` if frontend dependencies changed or `python -m pip install -r requirements.txt` (from `backend/`) if backend dependencies changed.
 
 ## Troubleshooting
 
-### Frontend opens, but processing fails
+- **Frontend loads but PDF processing fails:** Confirm both servers are running. Check http://127.0.0.1:8000/docs and the backend terminal.
+- **`ModuleNotFoundError` (such as `fontTools` or `dotenv`):** Activate `backend/.venv` and run `python -m pip install -r requirements.txt`. Use `python -m pip` to install into the active Python environment.
+- **PowerShell blocks virtual environment activation:** From `backend/`, try `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`, then `./.venv/Scripts/Activate.ps1` (PowerShell also accepts `.\.venv\Scripts\Activate.ps1`).
+- **Gemini summary fails:** Check that the project-root `.env` contains `GEMINI_API_KEY=...`, restart FastAPI, and inspect backend logs. A missing key, quota, model access, or network issue can cause failure.
+- **Blank/missing PDF content:** Scans require OCR, which is not implemented. The custom parser may also filter out certain content or empty reader pages.
+- **Bookmarks don't appear:** `backend/main.py` currently returns bookmark data as `toc`, but `frontend/src/types/book.ts` and the sidebar expect `table_of_contents`. Align those names to enable bookmark navigation.
+- **Uploads take too long:** The frontend cancels upload requests after 60 seconds; try a smaller PDF.
 
-Check that **both** terminals are running. Visit **http://127.0.0.1:8000/docs** to confirm the backend started. Vite's `/api` proxy depends on the backend being available.
-
-### `npm` or `node` is not recognized
-
-Install Node.js LTS, then restart your terminal and check `node --version` and `npm --version`.
-
-### `python` is not recognized
-
-Confirm Python is installed. On Windows, try `py --version`; on macOS/Linux, use `python3 --version` before creating the virtual environment.
-
-### PowerShell won't activate `.venv`
-
-If the execution policy blocks activation, you can allow scripts for only the current PowerShell session:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.venv\Scripts\Activate.ps1
-```
-
-Run this from `backend/`. Alternatively, use the virtual environment's Python directly without activating it, for example `.venv\Scripts\python.exe -m pip install -r requirements.txt`.
-
-### `fastapi` or a Python package is missing
-
-Activate the backend virtual environment, then run:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-If you see `ModuleNotFoundError: No module named 'google'`, make sure `google-genai` was installed from `backend/requirements.txt` **inside the active virtual environment**.
-
-### PDF has no readable text
-
-Some PDFs are scanned images or contain unusual layouts. The current backend extracts embedded text; it does not perform OCR. Try a different text-based PDF.
-
-### Summarization fails
-
-Check that `GEMINI_API_KEY` is set in the same terminal running FastAPI, then read the backend terminal output. A missing key, model/API access issue, quota limit, or network error may cause summarization to fail. Don't share the key when asking for help.
-
-If the app reports **“This PDF is too long for the current summary feature”**, the extracted text exceeded the app's 50,000-character limit. Try a shorter text-based PDF; uploading the same file again won't bypass that limit.
-
-### Pulled code stopped working
-
-Check `git status`, reinstall dependencies if their files changed, restart both servers, and check the backend terminal plus browser console for the actual error. Avoid deleting local changes or resetting branches just to fix a setup issue.
-
-## Team reminder
-
-Before writing new code, check `git status` and pull the latest `main` into your feature branch when needed. That reduces the chance of spending days implementing something on top of outdated code.
-
-Use pull requests to review changes before they enter `main`, and keep API keys, virtual environments, `node_modules`, and generated build files out of Git.
+**Team reminder:** Keep your feature branch updated from `main`, run the relevant checks before opening a PR, and never commit `.env`, virtual environments, or generated files.
