@@ -8,9 +8,11 @@ from io import BytesIO
 from docx import Document
 from fastapi.responses import Response
 from typing import Literal
-
-
+from pathlib import Path
+from dotenv import load_dotenv
 from parser import parse_uploaded_pdf
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 app = FastAPI()
 
