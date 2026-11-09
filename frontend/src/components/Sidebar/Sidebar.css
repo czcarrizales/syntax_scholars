@@ -131,6 +131,11 @@
 .page-item {
   width: 100%;
 
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  flex-shrink: 0;
+
   padding: 11px 13px;
 
   border: 0;
@@ -172,6 +177,36 @@
     0 5px 14px rgba(103, 77, 164, 0.1);
 }
 
+.chapter-item {
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+.sidebar .navigation-label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #65577e;
+}
+
+.page-item:has(.navigation-title) {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.navigation-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.navigation-page {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #716583;
+}
 
 @media (max-width: 850px) {
   .sidebar {
