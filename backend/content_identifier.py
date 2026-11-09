@@ -94,7 +94,9 @@ def _same_paragraph(previous, current, typical_height, params):
     if gap < -typical_height * 0.45 or gap > typical_height * 0.9:
         return False
     # A new paragraph commonly indents its first line.
-    if bx0 - ax0 > typical_height * 1.2:
+    # First-line indentation is a strong paragraph boundary in novels.
+    # A 15pt indent can be smaller than 1.2x the font line height.
+    if bx0 - ax0 > typical_height * params.get("paragraph_indent_threshold", 0.6):
         return False
     # A change to a different text column isn't a paragraph continuation.
     if abs(bx0 - ax0) > typical_height * 4:

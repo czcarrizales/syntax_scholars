@@ -10,6 +10,8 @@ from fastapi.responses import Response
 from typing import Literal
 
 
+from parser import parse_uploaded_pdf
+
 app = FastAPI()
 
 
@@ -63,14 +65,15 @@ async def upload_pdf(file: UploadFile = File(...)):
                 detail="The PDF contains no pages."
             )
 
-        # Extract text from each page
-        pages = []
+        # # Extract text from each page
+        # pages = []
+        #
+        # for page_number, page in enumerate(document):
+        #     pages.append({
+        #         "page": page_number + 1,
+        #         "text": page.get_text()
+        #     })
 
-        for page_number, page in enumerate(document):
-            pages.append({
-                "page": page_number + 1,
-                "text": page.get_text()
-            })
 
         # Read the PDF's bookmarks for chapter and lesson navigation.
         table_of_contents = []
@@ -87,6 +90,14 @@ async def upload_pdf(file: UploadFile = File(...)):
         # Always release the PDF resource
         document.close()
 
+    # return {
+    #     "title": file.filename,
+    #     "page_count": len(pages),
+    #     "pages": pages
+    # }
+
+    parsed_data = parse_uploaded_pdf(file.filename, contents)
+    return parsed_data
     return {
         "title": file.filename,
         "page_count": len(pages),
