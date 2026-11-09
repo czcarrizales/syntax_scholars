@@ -1,4 +1,3 @@
-[Syntax_Scholars_README_Updated (1).md](https://github.com/user-attachments/files/34599453/Syntax_Scholars_README_Updated.1.md)
 # Syntax Scholars
 
 Syntax Scholars is a web-based PDF reader that extracts text into a simpler reading layout. You can navigate pages, search, listen with text-to-speech, adjust the display, generate AI summaries, and export text to Word.
