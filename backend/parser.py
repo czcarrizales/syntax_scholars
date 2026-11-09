@@ -101,10 +101,10 @@ def parse_pdf(params, pdf_path, output_path=None):
         if record["type"] == "heading":
             record["content"] = record["content"].lstrip(strip_chars).strip()
 
-    print("sections")
-    for section in sections[:300]: print(section)  # -----------------------------
-    print("records")
-    for record in records[:300]: print(record)  # -----------------------------
+    # print("sections")
+    # for section in sections[:300]: print(section)  # -----------------------------
+    # print("records")
+    # for record in records[:300]: print(record)  # -----------------------------
 
     # Match the existing page-based API response, using filtered parser text.
     # A paragraph spanning pages is assigned to its starting page; the parser's
@@ -176,8 +176,9 @@ def parse_uploaded_pdf(filename, contents):
             if page["text"].strip()
         ]
 
-        # Renumber pages starting at 1
+        # Preserve original page numbers and assign new page numbers
         for page_number, page in enumerate(result["pages"], start=1):
+            page["source_page"] = page["page"]
             page["page"] = page_number
 
         # Update page count
