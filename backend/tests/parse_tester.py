@@ -1,14 +1,24 @@
 """Run parser experiments on a single PDF or contiguous PDF samples."""
 
 import random
+from html import escape
 import time
 from datetime import datetime
 from pathlib import Path
 
 import pymupdf
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from parser import parse_pdf
-
 
 ### SETTINGS
 params = {
@@ -77,16 +87,114 @@ def create_sample(pdf_path, sample_dir, rng):
     return sample_path, pages
 
 
+
+def create_speech_pdf(result, output_path):
+    """Render the parser's page-based API result as a readable, page-aligned PDF.
+
+    Only source pages with speech content are rendered. Source page numbers
+    stay unchanged, and long text continues onto a labeled overflow page
+    rather than being clipped or silently omitted.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Prefer an installed Unicode TrueType font. Do not bundle font files.
+    font_candidates = [
+        Path("C:/Windows/Fonts/arial.ttf"),
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+        Path("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
+    ]
+    font_path = next((path for path in font_candidates if path.is_file()), None)
+    font_name = "Helvetica"
+    if font_path is not None:
+        font_name = "SpeechDejaVu"
+        if font_name not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(TTFont(font_name, str(font_path)))
+
+    page_width, page_height = letter
+    margin = 54
+    top = page_height - 70
+    bottom = 55
+    usable_width = page_width - 2 * margin
+    paragraph_style = ParagraphStyle(
+        "SpeechParagraph",
+        fontName=font_name,
+        fontSize=10,
+        leading=14,
+        alignment=TA_LEFT,
+        textColor=colors.black,
+        spaceAfter=12,
+        firstLineIndent=24,  # Visually distinguish the original paragraph boundaries.
+        splitLongWords=True,
+    )
+    pdf = canvas.Canvas(str(output_path), pagesize=letter)
+    pdf.setTitle(f"Parsed speech: {result.get('title', 'PDF')}")
+
+    def start_page(source_page, continuation=False):
+        pdf.setFont(font_name, 9)
+        pdf.setFillColor(colors.grey)
+        label = f"Source PDF page {source_page}"
+        if continuation:
+            label += " (continued)"
+        pdf.drawString(margin, page_height - 40, label)
+        pdf.line(margin, page_height - 47, page_width - margin, page_height - 47)
+        pdf.drawRightString(page_width - margin, 35, f"Source page {source_page}")
+        pdf.setFillColor(colors.black)
+        return top
+
+    for source_page in result["pages"]:
+        if not source_page.get("text", "").strip():
+            continue
+        number = source_page["page"]
+        y = start_page(number)
+        # Each nonempty line in the API response is one original paragraph.
+        # Indent its first line and leave space after it; do not join paragraphs.
+        for line in source_page.get("text", "").splitlines():
+            if not line.strip():
+                continue
+            remaining = [Paragraph(escape(line), paragraph_style)]
+            while remaining:
+                paragraph = remaining.pop(0)
+                _, height = paragraph.wrap(usable_width, max(y - bottom, 1))
+                if height <= y - bottom:
+                    paragraph.drawOn(pdf, margin, y - height)
+                    y -= height + paragraph_style.spaceAfter
+                    continue
+                if y <= bottom + paragraph_style.leading:
+                    pdf.showPage()
+                    y = start_page(number, continuation=True)
+                available = y - bottom
+                pieces = paragraph.split(usable_width, available)
+                if not pieces:
+                    pdf.showPage()
+                    y = start_page(number, continuation=True)
+                    pieces = paragraph.split(usable_width, y - bottom)
+                    if not pieces:
+                        raise ValueError(f"Cannot fit text on source page {number}")
+                first, *rest = pieces
+                _, first_height = first.wrap(usable_width, y - bottom)
+                first.drawOn(pdf, margin, y - first_height)
+                y -= first_height + paragraph_style.spaceAfter
+                remaining = rest + remaining
+                if remaining:
+                    pdf.showPage()
+                    y = start_page(number, continuation=True)
+        pdf.showPage()
+    pdf.save()
+
+
 def main():
     if file_selection == "single_file":
         if not file_path.is_file():
             raise FileNotFoundError(f"PDF not found: {file_path}")
 
-        output_path = Path("layout_results") / f"{file_path.stem}_speech.txt"
+        output_path = Path("layout_results") / f"{file_path.stem}_speech.json"
         print(f"Parsing: {file_path}")
         start = time.perf_counter()
-        parse_pdf(params, file_path, output_path)
-        print(f"Parsed in {time.perf_counter() - start:.3f}s -> {output_path}")
+        result = parse_pdf(params, file_path, output_path)
+        pdf_output = output_path.with_suffix(".pdf")
+        create_speech_pdf(result, pdf_output)
+        print(f"Parsed in {time.perf_counter() - start:.3f}s -> {output_path}, {pdf_output}")
         return
 
     if file_selection != "directory_sampling":
@@ -111,11 +219,13 @@ def main():
             print(f"Skipping empty PDF: {pdf_path.name}")
             continue
 
-        output_path = speech_dir / f"{pdf_path.stem}_sample_speech.txt"
+        output_path = speech_dir / f"{pdf_path.stem}_sample_speech.json"
         print(f"{pdf_path.name}: original pages {pages[0]}-{pages[-1]}")
         start = time.perf_counter()
-        parse_pdf(params, sample_path, output_path)
-        print(f"  Parsed in {time.perf_counter() - start:.3f}s -> {output_path}")
+        result = parse_pdf(params, sample_path, output_path)
+        pdf_output = output_path.with_suffix(".pdf")
+        create_speech_pdf(result, pdf_output)
+        print(f"  Parsed in {time.perf_counter() - start:.3f}s -> {output_path}, {pdf_output}")
 
     print(f"Results: {batch_dir}")
 

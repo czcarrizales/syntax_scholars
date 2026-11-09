@@ -1,6 +1,7 @@
 """Top-level PDF extraction and text serialization pipeline."""
 
 import argparse
+import json
 from pathlib import Path
 
 import pymupdf
@@ -105,22 +106,94 @@ def parse_pdf(params, pdf_path, output_path=None):
     print("records")
     for record in records[:300]: print(record)  # -----------------------------
 
-    result = serialize(records)
+    # Match the existing page-based API response, using filtered parser text.
+    # A paragraph spanning pages is assigned to its starting page; the parser's
+    # current record format does not contain page-specific paragraph slices.
+    page_text = [[] for _ in pdf_data["pages"]]
+    for record in records:
+        if record["type"] not in {"heading", "body_text"}:
+            continue
+        content = " ".join(record["content"].split())
+        if content and record["pages"]:
+            page_number = record["pages"][0]
+            page_text[page_number - 1].append(content)
+
+    result = {
+        "title": pdf_path.name,
+        "page_count": len(pdf_data["pages"]),
+        "pages": [
+            {"page": index, "text": "\n".join(text)}
+            for index, text in enumerate(page_text, start=1)
+        ],
+    }
 
     if output_path is not None:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(result + ("\n" if result else ""), encoding="utf-8")
+        output_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     return result
 
+def parse_uploaded_pdf(filename, contents):
+    """Parse uploaded PDF bytes and return the standard page-based result."""
+    import tempfile
+
+    ### SETTINGS
+    params = {
+        "section_method": "embedded_toc",
+        "toc_levels": 0,  # 0 = no limit
+        "toc_page_tolerance": 0,  # Keep fuzzy TOC matches on their destination page.
+        "content_method": "statistical",
+        "reading_order": "position",  # "position" (visual) or "extraction" (PDF stream)
+        "reading_order_y_tolerance": 3.0,
+        "prose_block_style": True,
+        "prose_min_lines": 3,
+        "prose_min_avg_line_length": 40,
+        "merge_paragraphs": True,
+        "prose_group_min_median_chars": 30,
+        "prose_single_line_min_chars": 65,
+        "filter_equation_sentences": True,  # Skip display equations and interrupted sentences.
+        "omit_empty_sections": True,
+        "include_pre_section_content": False,
+        "heading_strip_chars": ["■"],
+        "normalize_heading_spacing": True,
+    }
+
+    if not contents:
+        raise ValueError("The uploaded PDF is empty.")
+
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temporary:
+        temporary_path = Path(temporary.name)
+        temporary.write(contents)
+
+    try:
+        result = parse_pdf(params, temporary_path)
+        result["title"] = str(filename).replace("\\", "/").rsplit("/", 1)[-1]
+
+        # Remove pages without readable text
+        result["pages"] = [
+            page for page in result["pages"]
+            if page["text"].strip()
+        ]
+
+        # Renumber pages starting at 1
+        for page_number, page in enumerate(result["pages"], start=1):
+            page["page"] = page_number
+
+        # Update page count
+        result["page_count"] = len(result["pages"])
+
+        return result
+
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Extract TTS-ready text from a PDF.")
+    parser = argparse.ArgumentParser(description="Extract page-grouped TTS-ready text from a PDF.")
     parser.add_argument("pdf", type=Path, help="Input PDF file")
     parser.add_argument("-o", "--output", type=Path, help="Output text file")
     args = parser.parse_args()
 
-    output = args.output or args.pdf.with_suffix(".txt")
+    output = args.output or args.pdf.with_suffix(".json")
     parse_pdf({}, args.pdf, output)
     print(f"Saved: {output}")
