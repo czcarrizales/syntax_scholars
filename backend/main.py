@@ -65,6 +65,8 @@ async def upload_pdf(file: UploadFile = File(...)):
                 detail="The PDF contains no pages."
             )
 
+        toc_entries = document.get_toc()
+
         # # Extract text from each page
         # pages = []
         #
@@ -75,35 +77,35 @@ async def upload_pdf(file: UploadFile = File(...)):
         #     })
 
 
-        # Read the PDF's bookmarks for chapter and lesson navigation.
-        table_of_contents = []
-
-        for level, title, page_number in document.get_toc():
-            if 1 <= page_number <= len(pages):
-                table_of_contents.append({
-                    "level": level,
-                    "title": title,
-                    "page": page_number
-                })
-
     finally:
-        # Always release the PDF resource
         document.close()
 
-    # return {
-    #     "title": file.filename,
-    #     "page_count": len(pages),
-    #     "pages": pages
-    # }
-
+    # Parse PDF and generate new page ordering
     parsed_data = parse_uploaded_pdf(file.filename, contents)
+
+    # Rebuild TOC using new reading-page numbers
+    table_of_contents = []
+
+    for level, title, original_page in toc_entries:
+        new_page = next(
+            (
+                page["page"]
+                for page in parsed_data["pages"]
+                if page["source_page"] >= original_page
+            ),
+            None
+        )
+
+        if new_page is not None:
+            table_of_contents.append({
+                "level": level,
+                "title": title,
+                "page": new_page
+            })
+
+    parsed_data["toc"] = table_of_contents
+
     return parsed_data
-    return {
-        "title": file.filename,
-        "page_count": len(pages),
-        "pages": pages,
-        "table_of_contents": table_of_contents
-    }
 
 
 class SummaryRequest(BaseModel):
