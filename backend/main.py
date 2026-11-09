@@ -105,7 +105,7 @@ async def upload_pdf(file: UploadFile = File(...)):
                 "page": new_page
             })
 
-    parsed_data["toc"] = table_of_contents
+    parsed_data["table_of_contents"] = table_of_contents
 
     return parsed_data
 
