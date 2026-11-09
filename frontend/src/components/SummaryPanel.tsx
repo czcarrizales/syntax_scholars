@@ -250,26 +250,33 @@ function SummaryPanel({
                             : "Summarize PDF"}
                 </button>
 
-                {summary && (
-                    <button
-                        type="button"
-                        className="summary-toggle"
-                        aria-expanded={isExpanded}
-                        onClick={() => setIsExpanded(!isExpanded)}
-                    >
-                        {isExpanded ? "Hide summary" : "Show summary"}
-                    </button>
-                )}
+
             </div>
 
             {summary && (
                 <button
                     type="button"
+                    className={
+                        isReadingSummary
+                            ? "summary-speech stop"
+                            : "summary-speech play"
+                    }
                     onClick={toggleSummarySpeech}
                     disabled={isLoading}
                     aria-pressed={isReadingSummary}
                 >
-                    {isReadingSummary ? "Stop" : "Read Summary"}
+                    {isReadingSummary ? "■ Stop" : "▶ Play Summary"}
+                </button>
+            )}
+
+            {summary && (
+                <button
+                    type="button"
+                    className="summary-toggle"
+                    aria-expanded={isExpanded}
+                    onClick={() => setIsExpanded(!isExpanded)}
+                >
+                    {isExpanded ? "Hide summary" : "Show summary"}
                 </button>
             )}
 

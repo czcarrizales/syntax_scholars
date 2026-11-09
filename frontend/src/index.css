@@ -1,3 +1,28 @@
 * {
-    color: blue;
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100%;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #272447;
+    background: #eee9f7;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+input,
+select {
+    color: #272447;
 }

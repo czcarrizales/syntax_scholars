@@ -184,3 +184,172 @@
 .app-layout--focus .main-content {
   padding: 14px;
 }
+
+/* Labels and spacing */
+.summary-page-range,
+.summary-export,
+.document-export {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.summary-panel label,
+.document-export label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Matching inputs and dropdowns */
+.summary-panel input,
+.summary-panel select,
+.document-export input {
+  min-height: 42px;
+  padding: 10px 12px;
+
+  background: var(--paper);
+  color: var(--navy);
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.summary-panel input[type="number"] {
+  width: 85px;
+}
+
+.summary-panel input[type="text"],
+.document-export input {
+  width: 100%;
+  min-width: 0;
+}
+
+.summary-panel input:focus-visible,
+.summary-panel select:focus-visible,
+.document-export input:focus-visible {
+  outline: 2px solid var(--lavender-500);
+  outline-offset: 2px;
+}
+
+.summary-panel input:disabled,
+.summary-panel select:disabled,
+.document-export input:disabled {
+  opacity: 0.6;
+}
+
+/* Processed text download panel */
+.document-export {
+  flex-shrink: 0;
+  margin-top: 12px;
+  padding: 14px 16px;
+
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.document-export label,
+.summary-export label {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+/* Processed text Save button */
+.document-export button {
+  min-height: 42px;
+  padding: 0 20px;
+
+  background: var(--lavender-100);
+  color: var(--navy);
+
+  border: 1px solid var(--lavender-200);
+  border-radius: 10px;
+
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.document-export button:hover:not(:disabled) {
+  background: var(--lavender-200);
+}
+
+.document-export button:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 3px;
+}
+
+.document-export button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.document-export p[role="alert"] {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--coral-text);
+}
+
+
+.summary-export {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.summary-header {
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+
+.app-layout--focus .document-export {
+  display: none;
+}
+
+
+
+.main-content {
+  overflow-y: auto;
+}
+
+
+.main-content>.reader {
+  flex: 1 0 420px;
+  min-height: 420px;
+}
+
+
+.summary-content {
+  max-height: 25vh;
+}
+
+
+.summary-panel>button {
+  margin-top: 10px;
+}
+
+.summary-panel .summary-speech.play {
+  background: var(--sage);
+  color: var(--sage-text);
+  border-color: var(--sage);
+}
+
+.summary-panel .summary-speech.play:hover:not(:disabled) {
+  background: #cbdcbe;
+}
+
+.summary-panel .summary-speech.stop {
+  background: var(--coral);
+  color: var(--coral-text);
+  border-color: var(--coral);
+}
+
+.summary-panel .summary-speech.stop:hover:not(:disabled) {
+  background: #edc5bd;
+}
