@@ -25,6 +25,9 @@ function SummaryPanel({
     const [isExpanded, setIsExpanded] = useState(false);
     const [startPage, setStartPage] = useState(1);
     const [endPage, setEndPage] = useState(book.pages.length);
+    const [summaryLength, setSummaryLength] = useState<
+        "short" | "medium" | "detailed"
+    >("medium");
 
     const [summaryFilename, setSummaryFilename] = useState(
         `${book.title.replace(/\.pdf$/i, "")}-summary`
@@ -153,7 +156,7 @@ function SummaryPanel({
             const response = await fetch("/api/summarize", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text }),
+                body: JSON.stringify({ text, length: summaryLength }),
             });
 
             if (!response.ok) {
@@ -211,6 +214,29 @@ function SummaryPanel({
                         />
                     </label>
                 </div>
+
+                <label>
+                    Summary length:
+                    <select
+                        value={summaryLength}
+                        disabled={isLoading}
+                        onChange={(event) => {
+                            const value = event.target.value;
+
+                            if (
+                                value === "short" ||
+                                value === "medium" ||
+                                value === "detailed"
+                            ) {
+                                setSummaryLength(value);
+                            }
+                        }}
+                    >
+                        <option value="short">Short</option>
+                        <option value="medium">Medium</option>
+                        <option value="detailed">Detailed</option>
+                    </select>
+                </label>
 
                 <button
                     type="button"
