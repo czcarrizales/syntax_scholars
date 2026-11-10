@@ -21,6 +21,8 @@ type ReaderProps = {
   onPageChange: (pageIndex: number) => void;
   isFocusMode: boolean;
   onToggleFocus: () => void;
+  isPaused: boolean
+  onTogglePause: () => void
 };
 
 function readSetting(
@@ -56,6 +58,8 @@ function Reader({
   onPageChange,
   isFocusMode,
   onToggleFocus,
+  isPaused,
+  onTogglePause
 }: ReaderProps) {
   const [fontSize, setFontSize] = useState(() =>
     readSetting("syntax-scholars-font-size", 20, [16, 18, 20, 22, 24, 26, 28]),
@@ -162,6 +166,8 @@ function Reader({
         onToggleSpeech={onToggleSpeech}
         onVoiceChange={onVoiceChange}
         onRateChange={onRateChange}
+        isPaused={isPaused}
+        onTogglePause={onTogglePause}
       />
 
       <article ref={readingPageRef} className="reading-page">

@@ -22,9 +22,14 @@ function App() {
   const [currentPage, setCurrentPage] = useState(0);
   const [message, setMessage] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const uploadControllerRef = useRef<AbortController | null>(null);
+
+  // Tracks the current sentence so settings can change during speech without restarting from the beginning of the page.
+  const speechChunkRef = useRef(0);
+  const activeSpeechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Stores the voices and the selected voice and speech rate
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -206,51 +211,137 @@ function App() {
     setCurrentPage((page) => Math.min(page + 1, book.pages.length - 1));
   }
 
-  function toggleSpeech() {
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
-    }
+  function getSpeechChunks(text: string) {
+    return text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [text];
+  }
 
+  function startSpeech(
+    voiceName = selectedVoice,
+    rate = speechRate
+  ) {
     if (!book) return;
 
     const text = book.pages[currentPage]?.text;
     if (!text) return;
 
-    window.speechSynthesis.cancel();
+    const chunks = getSpeechChunks(text);
+    const chunkIndex = speechChunkRef.current;
 
-    const speech = new SpeechSynthesisUtterance(text);
+    // Reset if the stored position is past the end of the page.
+    if (chunkIndex >= chunks.length) {
+      speechChunkRef.current = 0;
+      return;
+    }
 
-    // Matches the user selected voice to an available voice in the browser
-    const voice = voices.find((voice) => voice.name === selectedVoice);
+    const speech = new SpeechSynthesisUtterance(chunks[chunkIndex]);
+
+    activeSpeechRef.current = speech;
+
+    const voice = voices.find(
+      (voice) => voice.name === voiceName
+    );
 
     if (voice) {
       speech.voice = voice;
     }
 
-    speech.rate = speechRate;
+    speech.rate = rate;
     speech.pitch = 1;
 
-    // Keeps the UI synchronized when the speech ends or encounters an error
     speech.onend = () => {
-      setIsSpeaking(false);
+      // Ignore an utterance that was replaced by a setting change.
+      if (activeSpeechRef.current !== speech) return;
+
+      speechChunkRef.current += 1;
+
+      if (speechChunkRef.current < chunks.length) {
+        startSpeech(voiceName, rate);
+      } else {
+        activeSpeechRef.current = null;
+        speechChunkRef.current = 0;
+        setIsSpeaking(false);
+        setIsPaused(false);
+      }
     };
 
     speech.onerror = () => {
+      if (activeSpeechRef.current !== speech) return;
+
+      activeSpeechRef.current = null;
       setIsSpeaking(false);
+      setIsPaused(false);
     };
 
     setIsSpeaking(true);
     window.speechSynthesis.speak(speech);
   }
 
+  function togglePause() {
+    if (!isSpeaking) return;
+
+    if (isPaused) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
+    } else {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+    }
+  }
+
+  function toggleSpeech() {
+    if (isSpeaking) {
+      activeSpeechRef.current = null;
+      window.speechSynthesis.cancel();
+
+      speechChunkRef.current = 0;
+      setIsSpeaking(false);
+      setIsPaused(false);
+      return;
+    }
+
+    activeSpeechRef.current = null;
+    window.speechSynthesis.cancel();
+    speechChunkRef.current = 0;
+
+    setIsPaused(false);
+    startSpeech();
+  }
+
+  function handleVoiceChange(newVoice: string) {
+    setSelectedVoice(newVoice);
+
+    if (isSpeaking) {
+      // Replace the current sentence using the newly selected voice.
+      activeSpeechRef.current = null;
+      window.speechSynthesis.cancel();
+
+      startSpeech(newVoice, speechRate);
+    }
+  }
+
+  function handleRateChange(newRate: number) {
+    setSpeechRate(newRate);
+
+    if (isSpeaking) {
+      // Replace the current sentence using the newly selected speed.
+      activeSpeechRef.current = null;
+      window.speechSynthesis.cancel();
+
+      startSpeech(selectedVoice, newRate);
+    }
+  }
+
   // Cancels any ongoing speech when the current page changes
   useEffect(() => {
+    activeSpeechRef.current = null;
     window.speechSynthesis.cancel();
+
+    speechChunkRef.current = 0;
     setIsSpeaking(false);
+    setIsPaused(false);
 
     return () => {
+      activeSpeechRef.current = null;
       window.speechSynthesis.cancel();
     };
   }, [currentPage]);
@@ -326,10 +417,12 @@ function App() {
             onPrevious={previousPage}
             onNext={nextPage}
             onToggleSpeech={toggleSpeech}
-            onVoiceChange={setSelectedVoice}
-            onRateChange={setSpeechRate}
+            onVoiceChange={handleVoiceChange}
+            onRateChange={handleRateChange}
             isFocusMode={isFocusMode}
             onToggleFocus={() => setIsFocusMode((value) => !value)}
+            isPaused={isPaused}
+            onTogglePause={togglePause}
           />
         )}
       </main>

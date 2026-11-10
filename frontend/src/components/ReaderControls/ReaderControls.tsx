@@ -12,6 +12,8 @@ type ReaderControlsProps = {
   onToggleSpeech: () => void;
   onVoiceChange: (voiceName: string) => void;
   onRateChange: (rate: number) => void;
+  isPaused: boolean;
+  onTogglePause: () => void;
 };
 
 // Converts language codes to human-readable names for display in the voice selection dropdown
@@ -45,6 +47,8 @@ function ReaderControls({
   onToggleSpeech,
   onVoiceChange,
   onRateChange,
+  isPaused,
+  onTogglePause
 }: ReaderControlsProps) {
   return (
     <div className="reader-controls">
@@ -103,15 +107,28 @@ function ReaderControls({
         </label>
       </div>
 
-      <button
-        className={isSpeaking ? "speech-button stop" : "speech-button play"}
-        onClick={onToggleSpeech}
-        type="button"
-        aria-label={isSpeaking ? "Stop reading aloud" : "Read this page aloud"}
-      >
-        {isSpeaking ? "■ Stop" : "▶ Play"}
-      </button>
-    </div>
+      <div className="speech-buttons">
+        <button
+          className={isSpeaking ? "speech-button stop" : "speech-button play"}
+          onClick={onToggleSpeech}
+          type="button"
+          aria-label={isSpeaking ? "Stop reading aloud" : "Read this page aloud"}
+        >
+          {isSpeaking ? "■ Stop" : "▶ Play"}
+        </button>
+
+        <button
+          className="speech-button pause"
+          onClick={onTogglePause}
+          type="button"
+          disabled={!isSpeaking}
+          aria-label={isPaused ? "Resume reading aloud" : "Pause reading aloud"}
+        >
+          {isPaused ? "▶ Resume" : "⏸ Pause"}
+        </button>
+      </div>
+
+    </div >
   );
 }
 
