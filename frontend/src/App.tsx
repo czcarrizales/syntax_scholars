@@ -22,6 +22,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState(0);
   const [message, setMessage] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const uploadControllerRef = useRef<AbortController | null>(null);
@@ -259,6 +260,7 @@ function App() {
         activeSpeechRef.current = null;
         speechChunkRef.current = 0;
         setIsSpeaking(false);
+        setIsPaused(false);
       }
     };
 
@@ -267,10 +269,23 @@ function App() {
 
       activeSpeechRef.current = null;
       setIsSpeaking(false);
+      setIsPaused(false);
     };
 
     setIsSpeaking(true);
     window.speechSynthesis.speak(speech);
+  }
+
+  function togglePause() {
+    if (!isSpeaking) return;
+
+    if (isPaused) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
+    } else {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+    }
   }
 
   function toggleSpeech() {
@@ -280,6 +295,7 @@ function App() {
 
       speechChunkRef.current = 0;
       setIsSpeaking(false);
+      setIsPaused(false);
       return;
     }
 
@@ -287,6 +303,7 @@ function App() {
     window.speechSynthesis.cancel();
     speechChunkRef.current = 0;
 
+    setIsPaused(false);
     startSpeech();
   }
 
@@ -321,6 +338,7 @@ function App() {
 
     speechChunkRef.current = 0;
     setIsSpeaking(false);
+    setIsPaused(false);
 
     return () => {
       activeSpeechRef.current = null;
@@ -403,6 +421,8 @@ function App() {
             onRateChange={handleRateChange}
             isFocusMode={isFocusMode}
             onToggleFocus={() => setIsFocusMode((value) => !value)}
+            isPaused={isPaused}
+            onTogglePause={togglePause}
           />
         )}
       </main>
